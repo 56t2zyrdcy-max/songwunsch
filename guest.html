@@ -402,7 +402,7 @@
         <button type="button" class="tip-btn" data-amt="20">€20</button>
         <button type="button" class="tip-btn" id="customToggle" data-amt="custom">Custom</button>
       </div>
-      <input type="text" inputmode="decimal" id="customAmt" placeholder="€ amount — min €5" hidden>
+      <input type="text" inputmode="decimal" id="customAmt" placeholder="€ amount — min €1" hidden>
 
       <div class="stamp-row">
         <span class="stamp-label" id="stampLabel">Selected tip</span>
@@ -712,7 +712,7 @@
   const COOLDOWN_MS = 30 * 60 * 1000;      // 30 minutes
   // Tips below this are not accepted — the buttons offer €10/€20 and the
   // custom field refuses anything smaller.
-  const MIN_TIP = 5;
+  const MIN_TIP = 1;
   // The same song can't be requested twice within this window (one night).
   const DUP_WINDOW_MS = 6 * 60 * 60 * 1000; // 6 hours
   const LS_SONGS = SK('songs');
@@ -995,7 +995,7 @@
 
   function setAmount(amt){
     selectedAmount = amt;
-    amountStamp.textContent = '€' + amt;
+    amountStamp.textContent = (amt > 0 && amt < MIN_TIP) ? ('min €' + MIN_TIP) : ('€' + amt);
     updatePaypalVisibility();
   }
 
@@ -1005,7 +1005,8 @@
       btn.classList.add('active');
       if (btn.dataset.amt === 'custom'){
         customAmt.hidden = false;
-        customAmt.focus();
+      if (!customAmt.value) customAmt.value = String(MIN_TIP);
+        customAmt.focus(); customAmt.select();
         setAmount((parseFloat(String(customAmt.value).replace(',','.')) || 0));
       } else {
         customAmt.hidden = true;
