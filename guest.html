@@ -397,11 +397,12 @@
       <label id="tipLabel">Add a tip (optional)</label>
       <div class="tip-grid" role="group" aria-label="Tip amount">
         <button type="button" class="tip-btn" data-amt="0">€0</button>
+        <button type="button" class="tip-btn" data-amt="5">€5</button>
         <button type="button" class="tip-btn" data-amt="10">€10</button>
         <button type="button" class="tip-btn" data-amt="20">€20</button>
         <button type="button" class="tip-btn" id="customToggle" data-amt="custom">Custom</button>
       </div>
-      <input type="text" inputmode="decimal" id="customAmt" placeholder="€ amount — min €10" hidden>
+      <input type="text" inputmode="decimal" id="customAmt" placeholder="€ amount — min €5" hidden>
 
       <div class="stamp-row">
         <span class="stamp-label" id="stampLabel">Selected tip</span>
@@ -604,7 +605,7 @@
       note: "Requests are played when they fit the vibe — not every song fits every moment.",
       songLabel: 'Artist & Song', songPh: 'e.g. Fred again.. – Marea',
       hint: 'One request every 30 minutes. After that the next one is free again.',
-      tipLabel: 'Add a tip (optional)', custom: 'Custom', customPh: '€ amount — min €10',
+      tipLabel: 'Add a tip (optional)', custom: 'Custom', customPh: '€ amount — min €5',
       selectedTip: 'Selected tip',
       cooldownText: 'This phone already sent a request. You can send the next one when the clock runs out.',
       sendFree: 'Send request', sendFreeAlt: 'Or send without a tip',
@@ -711,7 +712,7 @@
   const COOLDOWN_MS = 30 * 60 * 1000;      // 30 minutes
   // Tips below this are not accepted — the buttons offer €10/€20 and the
   // custom field refuses anything smaller.
-  const MIN_TIP = 10;
+  const MIN_TIP = 5;
   // The same song can't be requested twice within this window (one night).
   const DUP_WINDOW_MS = 6 * 60 * 60 * 1000; // 6 hours
   const LS_SONGS = SK('songs');
