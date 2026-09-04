@@ -401,7 +401,7 @@
         <button type="button" class="tip-btn" data-amt="20">€20</button>
         <button type="button" class="tip-btn" id="customToggle" data-amt="custom">Custom</button>
       </div>
-      <input type="number" id="customAmt" min="10" step="1" placeholder="€ amount — min €10" hidden>
+      <input type="text" inputmode="decimal" id="customAmt" placeholder="€ amount — min €10" hidden>
 
       <div class="stamp-row">
         <span class="stamp-label" id="stampLabel">Selected tip</span>
@@ -1005,7 +1005,7 @@
       if (btn.dataset.amt === 'custom'){
         customAmt.hidden = false;
         customAmt.focus();
-        setAmount(Number(customAmt.value) || 0);
+        setAmount((parseFloat(String(customAmt.value).replace(',','.')) || 0));
       } else {
         customAmt.hidden = true;
         setAmount(Number(btn.dataset.amt));
@@ -1014,7 +1014,7 @@
   });
 
   customAmt.addEventListener('input', () => {
-    setAmount(Number(customAmt.value) || 0);
+    setAmount((parseFloat(String(customAmt.value).replace(',','.')) || 0));
   });
 
   function currentSong(){ return songInput.value.trim(); }
