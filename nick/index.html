@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>NICK SMILES — Songwunsch</title>
+<meta name="theme-color" content="#0B0713">
+
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --accent:#C43BF5; --accent2:#7A46E8;
+    --bgTop:#1E0B33; --bgBase:#08060F;
+    --foam:#F6F2FB; --muted:#9A8FB0;
+    --panel:rgba(255,255,255,.05); --line:rgba(246,242,251,.13);
+    --ok:#7CF5B6; --bad:#FF7A8A;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;padding:26px 16px 60px;min-height:100vh;
+    background:radial-gradient(ellipse at top,var(--bgTop) 0%,var(--bgBase) 58%) no-repeat,var(--bgBase);
+    color:var(--foam);font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;line-height:1.55}
+  .wrap{max-width:440px;margin:0 auto}
+
+  .vinyl{width:132px;height:132px;margin:6px auto 20px;border-radius:50%;position:relative;
+    background:conic-gradient(from 0deg,#15101f,#241634,#15101f,#241634,#15101f);
+    box-shadow:0 0 0 1px rgba(255,255,255,.08),0 18px 46px rgba(196,59,245,.22);
+    animation:spin 9s linear infinite}
+  .vinyl::after{content:'';position:absolute;inset:0;border-radius:50%;
+    background:repeating-radial-gradient(circle at 50% 50%,rgba(255,255,255,.045) 0 1px,transparent 1px 5px)}
+  .vinyl img{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+    width:56%;height:56%;border-radius:50%;object-fit:cover;object-position:50% 32%;z-index:2;
+    box-shadow:0 0 0 3px rgba(196,59,245,.55)}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @media (prefers-reduced-motion:reduce){.vinyl{animation:none}}
+
+  .lockup{display:block;width:min(300px,84%);margin:0 auto 10px}
+  .note{text-align:center;color:var(--accent);font-size:13.5px;margin:0 auto 26px;max-width:360px}
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px}
+  label{display:block;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:2px;
+    text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+  input[type=text]{width:100%;background:rgba(0,0,0,.35);border:1px solid var(--line);border-radius:12px;
+    padding:15px 14px;color:var(--foam);font-size:16px;font-family:inherit;outline:none}
+  input[type=text]:focus{border-color:var(--accent)}
+  input::placeholder{color:#6D6280}
+  button.go{width:100%;margin-top:14px;padding:16px;border:0;border-radius:12px;cursor:pointer;
+    font-family:'Anton',sans-serif;font-size:19px;letter-spacing:1.2px;color:#12071C;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    box-shadow:0 10px 26px rgba(196,59,245,.28)}
+  button.go:disabled{opacity:.45;box-shadow:none;cursor:default}
+  button.ghost{margin-top:12px;width:100%;padding:13px;border-radius:12px;cursor:pointer;
+    background:transparent;border:1px solid var(--line);color:var(--foam);font-family:inherit;font-size:14px}
+
+  .msg{margin-top:14px;font-size:14px;text-align:center;min-height:20px}
+  .msg.err{color:var(--bad)} .msg.ok{color:var(--ok)}
+
+  .state{display:none;text-align:center}
+  .state.on{display:block}
+  .big{font-family:'Anton',sans-serif;font-size:26px;margin:2px 0 6px;letter-spacing:.5px}
+  .song{font-size:16px;color:var(--accent);word-break:break-word;margin-bottom:4px}
+  .sub{color:var(--muted);font-size:13.5px}
+  .pulse{width:9px;height:9px;border-radius:50%;background:var(--ok);display:inline-block;margin-right:7px;
+    animation:blink 1.6s ease-in-out infinite;vertical-align:middle}
+  @keyframes blink{50%{opacity:.25}}
+  .reaction{font-size:44px;margin:10px 0 2px}
+
+  footer{margin-top:26px;text-align:center;color:#5E5670;font-size:11px;
+    font-family:'JetBrains Mono',monospace;letter-spacing:1.5px;text-transform:uppercase}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="vinyl"><img id="markImg" alt=""></div>
+  <img class="lockup" id="fullImg" alt="NICK SMILES">
+  <p class="note" id="note"></p>
+
+  <!-- FORM -->
+  <div class="card" id="formCard">
+    <label id="lblSong">Song &amp; Artist</label>
+    <input type="text" id="song" maxlength="90" autocomplete="off" placeholder="z. B. Calvin Harris – Summer">
+    <button class="go" id="send" disabled>WUNSCH SENDEN</button>
+    <div class="msg" id="msg"></div>
+  </div>
+
+  <!-- SENT -->
+  <div class="card state" id="sentCard" style="margin-top:0">
+    <div class="reaction" id="reactionBox" hidden></div>
+    <div class="big" id="sentTitle">ANGEKOMMEN</div>
+    <div class="song" id="sentSong"></div>
+    <div class="sub" id="sentSub"><span class="pulse"></span>Nick sieht deinen Wunsch.</div>
+    <button class="ghost" id="again" hidden>Neuen Wunsch senden</button>
+  </div>
+
+  <footer>NICK SMILES · SONGWUNSCH</footer>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="img.js?v=1"></script>
+<script src="dj.js?v=1"></script>
+<script>
+(function(){
+  'use strict';
+
+  /* ---------- logos ---------- */
+  try{
+    document.getElementById('markImg').src = window.NICK_IMG.mark;
+    document.getElementById('fullImg').src = window.NICK_IMG.full;
+    var ic=document.createElement('link'); ic.rel='icon'; ic.href=window.NICK_IMG.mark;
+    document.head.appendChild(ic);
+  }catch(e){}
+
+  /* ---------- language ---------- */
+  var DE = (navigator.language || 'de').toLowerCase().indexOf('de') === 0;
+  var T = DE ? {
+    note:'Wünsche werden gespielt, wenn sie zur Stimmung passen — nicht jeder Song passt in jeden Moment.',
+    label:'Song & Artist', ph:'z. B. Calvin Harris – Summer', send:'WUNSCH SENDEN',
+    empty:'Schreib erst Song und Artist.', sending:'Wird gesendet …',
+    cool:'Du hast gerade schon gewünscht. In {m} Min. geht der nächste.',
+    dup:'Der Song ist schon in der Liste. Such dir einen anderen aus.',
+    fail:'Hat nicht geklappt. Netz prüfen und nochmal versuchen.',
+    title:'ANGEKOMMEN', sub:'Nick sieht deinen Wunsch.',
+    rejTitle:'PASST GERADE NICHT', rejSub:'Der Song passt jetzt nicht in den Set — such dir gern einen anderen aus.',
+    again:'Neuen Wunsch senden', conn:'Verbindung wird aufgebaut …'
+  } : {
+    note:'Requests are played when they fit the vibe — not every song fits every moment.',
+    label:'Song & Artist', ph:'e.g. Calvin Harris – Summer', send:'SEND REQUEST',
+    empty:'Type the song and artist first.', sending:'Sending …',
+    cool:'You just sent one. Next request in {m} min.',
+    dup:'That song is already on the list. Pick another one.',
+    fail:'That did not work. Check your connection and try again.',
+    title:'RECEIVED', sub:'Nick can see your request.',
+    rejTitle:'NOT RIGHT NOW', rejSub:'That one does not fit the set right now — feel free to pick another.',
+    again:'Send another request', conn:'Connecting …'
+  };
+  document.documentElement.lang = DE ? 'de' : 'en';
+  document.getElementById('note').textContent   = T.note;
+  document.getElementById('lblSong').textContent= T.label;
+  document.getElementById('song').placeholder   = T.ph;
+  document.getElementById('send').textContent   = T.send;
+  document.getElementById('again').textContent  = T.again;
+
+  /* ---------- firebase ---------- */
+  firebase.initializeApp(window.NICK.firebase);
+  var db = firebase.database();
+  var ROOT = window.NICK.root;                 // djs/nick
+  var COOLDOWN_MS   = 30 * 60 * 1000;          // one request per phone / 30 min
+  var DUP_WINDOW_MS =  6 * 60 * 60 * 1000;     // same song locked for 6 h
+
+  var $ = function(id){ return document.getElementById(id); };
+  var songEl = $('song'), sendEl = $('send'), msgEl = $('msg');
+  var formCard = $('formCard'), sentCard = $('sentCard');
+
+  function store(k){ return 'djreq.nick.' + k; }
+  function get(k){ try{ return localStorage.getItem(store(k)); }catch(e){ return null; } }
+  function set(k,v){ try{ localStorage.setItem(store(k),v); }catch(e){} }
+
+  var deviceKey = get('device');
+  if (!deviceKey){
+    deviceKey = 'd' + Math.random().toString(36).slice(2,10) + Date.now().toString(36).slice(-4);
+    set('device', deviceKey);
+  }
+
+  function songKey(s){
+    var n = s.toLowerCase().replace(/[^a-z0-9äöüß]+/g,'');
+    var h = 5381, i;
+    for (i = 0; i < n.length; i++) h = ((h << 5) + h + n.charCodeAt(i)) >>> 0;
+    return 's' + h.toString(36);
+  }
+  function say(text, cls){ msgEl.textContent = text; msgEl.className = 'msg' + (cls ? ' ' + cls : ''); }
+
+  /* ---------- anonymous session ---------- */
+  say(T.conn, '');
+  firebase.auth().onAuthStateChanged(function(user){
+    if (!user) return;
+    sendEl.disabled = false;
+    say('', '');
+  });
+  firebase.auth().signInAnonymously().catch(function(e){
+    console.error('Anonymous sign-in failed:', e);
+    say(T.fail, 'err');
+  });
+
+  /* ---------- submit ---------- */
+  var busy = false;
+
+  sendEl.addEventListener('click', function(){
+    if (busy) return;
+    var song = songEl.value.trim().replace(/\s+/g,' ');
+    if (song.length < 2){ say(T.empty, 'err'); songEl.focus(); return; }
+
+    busy = true; sendEl.disabled = true; say(T.sending, '');
+    var now = Date.now(), sk = songKey(song), dk = deviceKey;
+
+    db.ref(ROOT + '/guardrail/devices/' + dk).once('value').then(function(snap){
+      var ts = snap.val() || 0;
+      if (now - ts < COOLDOWN_MS){
+        var left = Math.ceil((COOLDOWN_MS - (now - ts)) / 60000);
+        throw { soft: T.cool.replace('{m}', left) };
+      }
+      return db.ref(ROOT + '/guardrail/songs/' + sk).once('value');
+    }).then(function(snap){
+      var ts = snap.val() || 0;
+      if (now - ts < DUP_WINDOW_MS) throw { soft: T.dup };
+
+      var record = {
+        song: song,
+        amount: 0,
+        tipStatus: 'none',
+        createdAt: now,
+        played: false,
+        paypalOrderId: null,
+        uid: (firebase.auth().currentUser || {}).uid || null
+      };
+      return db.ref(ROOT + '/requests').push(record);
+    }).then(function(ref){
+      var updates = {};
+      updates['guardrail/songs/' + sk]   = now;
+      updates['guardrail/devices/' + dk] = now;
+      db.ref(ROOT).update(updates).catch(function(){});
+      showSent(song, ref.key);
+    }).catch(function(err){
+      busy = false; sendEl.disabled = false;
+      if (err && err.soft){ say(err.soft, 'err'); return; }
+      console.error(err);
+      say(T.fail, 'err');
+    });
+  });
+
+  songEl.addEventListener('input', function(){ if (msgEl.textContent) say('', ''); });
+  songEl.addEventListener('keydown', function(e){ if (e.key === 'Enter') sendEl.click(); });
+
+  /* ---------- after sending ---------- */
+  function showSent(song, id){
+    formCard.style.display = 'none';
+    sentCard.classList.add('on');
+    $('sentSong').textContent = song;
+    $('sentTitle').textContent = T.title;
+    $('sentSub').innerHTML = '<span class="pulse"></span>' + T.sub;
+    $('again').hidden = true;
+    $('reactionBox').hidden = true;
+
+    db.ref(ROOT + '/requests/' + id + '/rejected').on('value', function(s){
+      if (!s.val()) return;
+      $('sentTitle').textContent = T.rejTitle;
+      $('sentSub').textContent   = T.rejSub;
+      $('again').hidden = false;
+    });
+    db.ref(ROOT + '/requests/' + id + '/reaction').on('value', function(s){
+      var r = s.val();
+      if (!r) return;
+      var box = $('reactionBox');
+      box.textContent = r; box.hidden = false;
+    });
+  }
+
+  $('again').addEventListener('click', function(){
+    songEl.value = '';
+    sentCard.classList.remove('on');
+    formCard.style.display = '';
+    busy = false; sendEl.disabled = false;
+    say('', '');
+    songEl.focus();
+  });
+
+})();
+</script>
+</body>
+</html>
