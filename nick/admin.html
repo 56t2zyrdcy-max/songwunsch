@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NICK SMILES — DJ-Panel</title>
+<meta name="theme-color" content="#07060C">
+<meta name="robots" content="noindex,nofollow">
+
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{ --accent:#C43BF5; --accent2:#7A46E8; --top:#1A0A2E; --base:#07060C;
+         --foam:#F6F2FB; --muted:#948AA9; --panel:rgba(255,255,255,.05);
+         --line:rgba(246,242,251,.13); --ok:#7CF5B6; --bad:#FF7A8A; }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;padding:18px 14px 70px;min-height:100vh;
+       background:radial-gradient(ellipse at top,var(--top) 0%,var(--base) 60%) no-repeat,var(--base);
+       color:var(--foam);font-family:'Inter',-apple-system,sans-serif}
+  .wrap{max-width:560px;margin:0 auto}
+
+  header{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+  header img{width:40px;height:40px;border-radius:50%;object-fit:cover;object-position:50% 30%;box-shadow:0 0 0 2px rgba(196,59,245,.5)}
+  header h1{font-family:'Anton',sans-serif;font-weight:400;font-size:19px;margin:0;letter-spacing:.6px}
+  header .st{margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1.6px;
+             text-transform:uppercase;color:var(--muted)}
+  header .st b{color:var(--ok)} header .st b.off{color:var(--bad)}
+
+  .bar{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+  .tab{padding:9px 14px;border-radius:999px;border:1px solid var(--line);background:transparent;
+       color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:1.4px;
+       text-transform:uppercase;cursor:pointer}
+  .tab.on{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#12071C;border-color:transparent;font-weight:700}
+  .tab.snd{margin-left:auto}
+
+  .item{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px 15px;margin-bottom:10px;
+        transition:opacity .2s}
+  .item.played{opacity:.42}
+  .item.rejected{border-color:rgba(255,122,138,.4)}
+  .item .song{font-size:16px;font-weight:600;word-break:break-word}
+  .item .meta{font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:1.4px;
+              text-transform:uppercase;color:var(--muted);margin-top:5px}
+  .acts{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+  .acts button{flex:1;min-width:52px;padding:11px 0;border-radius:11px;border:1px solid var(--line);
+               background:rgba(0,0,0,.28);color:var(--foam);font-size:16px;cursor:pointer}
+  .acts button.on{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#12071C;border-color:transparent}
+  .acts button.del.arm{border-color:var(--bad);color:var(--bad)}
+
+  .empty{text-align:center;color:var(--muted);padding:44px 10px;font-size:14px}
+  .gate{max-width:400px;margin:70px auto;background:var(--panel);border:1px solid var(--line);
+        border-radius:18px;padding:26px;text-align:center}
+  .gate h2{font-family:'Anton',sans-serif;font-weight:400;margin:0 0 8px}
+  .gate p{color:var(--muted);font-size:14px;margin:0}
+  .hint{margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1.6px;
+        text-transform:uppercase;color:var(--muted);text-align:center}
+</style>
+</head>
+<body>
+
+<div class="gate" id="gate">
+  <h2>Moment …</h2>
+  <p id="gateMsg">Verbindung wird aufgebaut.</p>
+</div>
+
+<div class="wrap" id="app" hidden>
+  <header>
+    <img id="markImg" alt="">
+    <h1>NICK SMILES · PANEL</h1>
+    <div class="st">Live <b id="conn">•</b></div>
+  </header>
+
+  <div class="bar">
+    <button class="tab on" data-f="all">Alle</button>
+    <button class="tab" data-f="open">Offen</button>
+    <button class="tab" data-f="played">Gespielt</button>
+    <button class="tab snd" id="sndBtn">🔔 Ton an</button>
+  </div>
+
+  <div id="list"></div>
+  <div class="hint">✕ zweimal antippen = löschen · Wünsche unter 24 h sind gesperrt</div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="img.js?v=1"></script>
+<script src="dj.js?v=1"></script>
+<script>
+(function(){
+  'use strict';
+  var $ = function(id){ return document.getElementById(id); };
+  var gate = $('gate'), gateMsg = $('gateMsg'), app = $('app');
+  try{ $('markImg').src = window.NICK_IMG.mark; }catch(e){}
+
+  function block(text){ gate.hidden = false; app.hidden = true;
+    gate.querySelector('h2').textContent = 'Kein Zugriff'; gateMsg.textContent = text; }
+
+  /* ---------- panel key ---------- */
+  var key = '';
+  try{ key = new URLSearchParams(location.search).get('k') || ''; }catch(e){}
+  if (window.NICK.panelKey && key !== window.NICK.panelKey){
+    block('Dieser Link ist nicht vollständig. Nimm den Link aus deinem Lesezeichen.');
+    return;
+  }
+
+  firebase.initializeApp(window.NICK.firebase);
+  var db = firebase.database();
+  var ROOT = window.NICK.root;
+
+  var DAY_MS = 24 * 60 * 60 * 1000;
+  var filter = 'all', sound = false, first = true, seen = {}, data = {};
+
+  /* ---------- session ---------- */
+  firebase.auth().signInAnonymously().catch(function(e){
+    console.error('Anonymous session failed:', e);
+    block('Keine Verbindung zur Datenbank. Internet prüfen und Seite neu laden.');
+  });
+
+  firebase.auth().onAuthStateChanged(function(user){
+    if (!user) return;
+    db.ref(ROOT + '/requests').limitToLast(1).once('value').then(function(){
+      gate.hidden = true; app.hidden = false;
+      start();
+    }).catch(function(e){
+      console.warn('Queue read failed:', e && e.code);
+      block('Die Datenbank hat den Zugriff abgelehnt. Özkan Bescheid geben.');
+    });
+  });
+
+  /* ---------- live queue ---------- */
+  function start(){
+    db.ref('.info/connected').on('value', function(s){
+      var b = $('conn'); b.className = s.val() ? '' : 'off'; b.textContent = s.val() ? '•' : '×';
+    });
+
+    db.ref(ROOT + '/requests').orderByChild('createdAt').on('value', function(snap){
+      data = snap.val() || {};
+      var ids = Object.keys(data);
+      if (!first){
+        ids.forEach(function(id){
+          if (!seen[id] && !data[id].removed){ ping(); }
+        });
+      }
+      ids.forEach(function(id){ seen[id] = true; });
+      first = false;
+      render();
+    });
+  }
+
+  /* ---------- sound ---------- */
+  var actx = null;
+  function ping(){
+    if (!sound) return;
+    try{
+      actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+      var o = actx.createOscillator(), g = actx.createGain();
+      o.connect(g); g.connect(actx.destination);
+      o.type = 'sine'; o.frequency.value = 880;
+      g.gain.setValueAtTime(.0001, actx.currentTime);
+      g.gain.exponentialRampToValueAtTime(.25, actx.currentTime + .02);
+      g.gain.exponentialRampToValueAtTime(.0001, actx.currentTime + .35);
+      o.start(); o.stop(actx.currentTime + .36);
+    }catch(e){}
+  }
+  $('sndBtn').addEventListener('click', function(){
+    sound = !sound;
+    this.textContent = sound ? '🔔 Ton an' : '🔕 Ton aus';
+    this.classList.toggle('on', sound);
+    if (sound) ping();
+  });
+  $('sndBtn').textContent = '🔕 Ton aus';
+
+  /* ---------- filters ---------- */
+  Array.prototype.forEach.call(document.querySelectorAll('.tab[data-f]'), function(b){
+    b.addEventListener('click', function(){
+      Array.prototype.forEach.call(document.querySelectorAll('.tab[data-f]'), function(x){ x.classList.remove('on'); });
+      b.classList.add('on'); filter = b.dataset.f; render();
+    });
+  });
+
+  /* ---------- render ---------- */
+  function clock(ts){
+    var d = new Date(ts), p = function(n){ return n < 10 ? '0' + n : '' + n; };
+    return p(d.getHours()) + ':' + p(d.getMinutes());
+  }
+
+  function render(){
+    var list = $('list');
+    var rows = Object.keys(data).map(function(id){
+      var r = data[id] || {}; r._id = id; return r;
+    }).filter(function(r){ return !r.removed; })
+      .sort(function(a,b){ return (b.createdAt||0) - (a.createdAt||0); });
+
+    if (filter === 'open')   rows = rows.filter(function(r){ return !r.played; });
+    if (filter === 'played') rows = rows.filter(function(r){ return !!r.played; });
+
+    if (!rows.length){ list.innerHTML = '<div class="empty">Noch keine Wünsche.</div>'; return; }
+
+    list.innerHTML = '';
+    rows.forEach(function(r){
+      var el = document.createElement('div');
+      el.className = 'item' + (r.played ? ' played' : '') + (r.rejected ? ' rejected' : '');
+      var meta = clock(r.createdAt || Date.now());
+      if (r.rejected) meta += ' · abgelehnt';
+      if (r.reaction) meta += ' · ' + r.reaction;
+      el.innerHTML =
+        '<div class="song"></div><div class="meta">' + meta + '</div>' +
+        '<div class="acts">' +
+          '<button class="p" title="gespielt">▶</button>' +
+          '<button class="h" title="Reaktion">♥</button>' +
+          '<button class="r" title="passt nicht">🚫</button>' +
+          '<button class="del" title="löschen">✕</button>' +
+        '</div>';
+      el.querySelector('.song').textContent = r.song || '—';
+      if (r.played) el.querySelector('.p').classList.add('on');
+      if (r.rejected) el.querySelector('.r').classList.add('on');
+
+      var base = db.ref(ROOT + '/requests/' + r._id);
+      el.querySelector('.p').onclick = function(){ base.child('played').set(!r.played); };
+      el.querySelector('.h').onclick = function(){ base.child('reaction').set(r.reaction ? null : '❤️'); };
+      el.querySelector('.r').onclick = function(){ base.child('rejected').set(r.rejected ? null : true); };
+
+      var del = el.querySelector('.del'), armed = false, t = null;
+      del.onclick = function(){
+        if (!armed){
+          armed = true; del.classList.add('arm');
+          t = setTimeout(function(){ armed = false; del.classList.remove('arm'); }, 2500);
+          return;
+        }
+        clearTimeout(t);
+        if (Date.now() - (r.createdAt || 0) < DAY_MS){
+          base.child('removed').set(true);          // jünger als 24 h: nur ausblenden
+        } else {
+          base.remove();
+        }
+      };
+
+      list.appendChild(el);
+    });
+  }
+
+})();
+</script>
+</body>
+</html>
