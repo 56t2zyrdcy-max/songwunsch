@@ -28,12 +28,17 @@
   .vinyl::after{content:'';position:absolute;inset:0;border-radius:50%;
     background:repeating-radial-gradient(circle at 50% 50%,rgba(255,255,255,.045) 0 1px,transparent 1px 5px)}
   .vinyl img{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
-    width:56%;height:56%;border-radius:50%;object-fit:cover;object-position:50% 32%;z-index:2;
-    box-shadow:0 0 0 3px rgba(196,59,245,.55)}
+    width:56%;height:56%;border-radius:50%;object-fit:contain;padding:9px;z-index:2;
+    background:#0B0713;box-shadow:0 0 0 3px rgba(196,59,245,.55)}
   @keyframes spin{to{transform:rotate(360deg)}}
   @media (prefers-reduced-motion:reduce){.vinyl{animation:none}}
 
   .lockup{display:block;width:min(300px,84%);margin:0 auto 10px}
+  .langbar{display:flex;justify-content:center;gap:6px;margin:0 0 16px}
+  .langbar button{padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:transparent;
+    color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:1.6px;cursor:pointer}
+  .langbar button.on{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#12071C;
+    border-color:transparent;font-weight:700}
   .note{text-align:center;color:var(--accent);font-size:13.5px;margin:0 auto 26px;max-width:360px}
 
   .card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px}
@@ -73,6 +78,10 @@
 
   <div class="vinyl"><img id="markImg" alt=""></div>
   <img class="lockup" id="fullImg" alt="NICK SMILES">
+  <div class="langbar">
+    <button id="langDe" type="button">DE</button>
+    <button id="langEn" type="button">EN</button>
+  </div>
   <p class="note" id="note"></p>
 
   <!-- FORM -->
@@ -106,15 +115,15 @@
 
   /* ---------- logos ---------- */
   try{
-    document.getElementById('markImg').src = window.NICK_IMG.mark;
+    document.getElementById('markImg').src = window.NICK_IMG.full;
     document.getElementById('fullImg').src = window.NICK_IMG.full;
     var ic=document.createElement('link'); ic.rel='icon'; ic.href=window.NICK_IMG.mark;
     document.head.appendChild(ic);
   }catch(e){}
 
   /* ---------- language ---------- */
-  var DE = (navigator.language || 'de').toLowerCase().indexOf('de') === 0;
-  var T = DE ? {
+  var TEXTS = {};
+  TEXTS.de = {
     note:'Wünsche werden gespielt, wenn sie zur Stimmung passen — nicht jeder Song passt in jeden Moment.',
     label:'Song & Artist', ph:'z. B. Calvin Harris – Summer', send:'WUNSCH SENDEN',
     empty:'Schreib erst Song und Artist.', sending:'Wird gesendet …',
@@ -124,7 +133,8 @@
     title:'ANGEKOMMEN', sub:'Nick sieht deinen Wunsch.',
     rejTitle:'PASST GERADE NICHT', rejSub:'Der Song passt jetzt nicht in den Set — such dir gern einen anderen aus.',
     again:'Neuen Wunsch senden', conn:'Verbindung wird aufgebaut …'
-  } : {
+  };
+  TEXTS.en = {
     note:'Requests are played when they fit the vibe — not every song fits every moment.',
     label:'Song & Artist', ph:'e.g. Calvin Harris – Summer', send:'SEND REQUEST',
     empty:'Type the song and artist first.', sending:'Sending …',
@@ -135,12 +145,41 @@
     rejTitle:'NOT RIGHT NOW', rejSub:'That one does not fit the set right now — feel free to pick another.',
     again:'Send another request', conn:'Connecting …'
   };
-  document.documentElement.lang = DE ? 'de' : 'en';
-  document.getElementById('note').textContent   = T.note;
-  document.getElementById('lblSong').textContent= T.label;
-  document.getElementById('song').placeholder   = T.ph;
-  document.getElementById('send').textContent   = T.send;
-  document.getElementById('again').textContent  = T.again;
+
+  var LANG_KEY = 'djreq.nick.lang';
+  var lang = null;
+  try{ lang = localStorage.getItem(LANG_KEY); }catch(e){}
+  if (lang !== 'de' && lang !== 'en'){
+    lang = (navigator.language || 'de').toLowerCase().indexOf('de') === 0 ? 'de' : 'en';
+  }
+  var T = TEXTS[lang];
+  var wasRejected = false;
+
+  function applyLang(){
+    T = TEXTS[lang];
+    document.documentElement.lang = lang;
+    document.getElementById('note').textContent    = T.note;
+    document.getElementById('lblSong').textContent = T.label;
+    document.getElementById('song').placeholder    = T.ph;
+    document.getElementById('send').textContent    = T.send;
+    document.getElementById('again').textContent   = T.again;
+    document.getElementById('langDe').className = (lang === 'de') ? 'on' : '';
+    document.getElementById('langEn').className = (lang === 'en') ? 'on' : '';
+    var sc = document.getElementById('sentCard');
+    if (sc && sc.classList.contains('on')){
+      document.getElementById('sentTitle').textContent = wasRejected ? T.rejTitle : T.title;
+      document.getElementById('sentSub').innerHTML = wasRejected
+        ? T.rejSub : '<span class="pulse"></span>' + T.sub;
+    }
+  }
+  function setLang(l){
+    lang = l;
+    try{ localStorage.setItem(LANG_KEY, l); }catch(e){}
+    applyLang();
+  }
+  document.getElementById('langDe').addEventListener('click', function(){ setLang('de'); });
+  document.getElementById('langEn').addEventListener('click', function(){ setLang('en'); });
+  applyLang();
 
   /* ---------- firebase ---------- */
   firebase.initializeApp(window.NICK.firebase);
@@ -241,9 +280,11 @@
     $('sentSub').innerHTML = '<span class="pulse"></span>' + T.sub;
     $('again').hidden = true;
     $('reactionBox').hidden = true;
+    wasRejected = false;
 
     db.ref(ROOT + '/requests/' + id + '/rejected').on('value', function(s){
       if (!s.val()) return;
+      wasRejected = true;
       $('sentTitle').textContent = T.rejTitle;
       $('sentSub').textContent   = T.rejSub;
       $('again').hidden = false;
