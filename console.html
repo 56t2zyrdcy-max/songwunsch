@@ -41,6 +41,7 @@
   .gate .msg{margin-top:16px;font-size:13px;color:#ff9aa9;min-height:18px}
 
   .topbar{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:26px}
+  .topbar .acts{display:flex;gap:8px}
 
   .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:26px}
   .stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
@@ -55,21 +56,44 @@
   .dj-name{font-size:19px;font-weight:700}
   .dj-slug{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);
            border:1px solid var(--line);border-radius:6px;padding:2px 8px}
+  .tag{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;
+       text-transform:uppercase;border-radius:6px;padding:3px 7px}
+  .tag.own{color:var(--mint);border:1px solid rgba(124,245,182,.4);background:rgba(124,245,182,.08)}
+  .tag.new{color:var(--gold);border:1px solid rgba(255,200,87,.45);background:rgba(255,200,87,.10)}
   .dj-nums{margin-left:auto;display:flex;gap:18px;text-align:right}
   .dj-nums div{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted)}
   .dj-nums b{display:block;font-family:'Anton',sans-serif;font-size:22px;color:var(--foam);font-weight:400}
-  .dj-links{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+  .dj-links{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;align-items:center}
   .dj-links a{
     text-decoration:none;padding:9px 14px;border-radius:10px;border:1px solid var(--line);
     color:var(--foam);font-size:13px;font-weight:600;
   }
   .dj-links a:hover{border-color:var(--accent);color:var(--accent2)}
+  .dj-links button{
+    padding:9px 14px;border-radius:10px;border:1px solid var(--line);background:none;
+    color:var(--foam);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;
+  }
+  .dj-links button:hover{border-color:var(--accent);color:var(--accent2)}
   .warn{margin-top:14px;font-size:12px;color:var(--gold);
         background:rgba(255,200,87,.10);border:1px solid rgba(255,200,87,.35);
         border-radius:10px;padding:9px 12px;line-height:1.5}
   .uid{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);
        margin-top:12px;word-break:break-all}
   .uid b{color:var(--foam)}
+
+  /* ---- son 24 saatin istek dökümü ---- */
+  .reqs{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}
+  .reqs .hint{font-size:12px;color:var(--muted);margin-bottom:8px}
+  .row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px dashed rgba(247,244,250,.07);font-size:13px}
+  .row:last-child{border-bottom:none}
+  .row .ts{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);flex:0 0 92px}
+  .row .song{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .row .st{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;
+           text-transform:uppercase;color:var(--muted);flex:0 0 auto}
+  .row .st.played{color:var(--mint)}
+  .row .st.rejected{color:#ff8a9a}
+  .row .amt{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--gold);flex:0 0 auto}
+  .row.old{opacity:.5}
 </style>
 </head>
 <body>
@@ -89,16 +113,20 @@
       <div>
         <div class="eyebrow">Yönetim paneli</div>
         <h1>DJ Ağı</h1>
-        <p class="lead" id="lead">Tüm DJ'ler, canlı istek sayıları ve linkleri tek ekranda.</p>
+        <p class="lead" id="lead">Tüm DJ'ler, canlı istek sayıları, son 24 saatin dökümü ve gelen bahşişler tek ekranda.</p>
       </div>
-      <button class="ghost" id="signOut">Çıkış</button>
+      <div class="acts">
+        <button class="ghost" id="rescan">Yenile</button>
+        <button class="ghost" id="signOut">Çıkış</button>
+      </div>
     </div>
 
     <div class="stats">
       <div class="stat"><div class="n" id="sDjs">0</div><div class="l">DJ</div></div>
       <div class="stat"><div class="n" id="sOpen">0</div><div class="l">Bekleyen istek</div></div>
-      <div class="stat"><div class="n" id="sToday">0</div><div class="l">Bugün toplam</div></div>
-      <div class="stat"><div class="n" id="sTips">€0</div><div class="l">Bugünkü bahşiş</div></div>
+      <div class="stat"><div class="n" id="sToday">0</div><div class="l">Son 24 saat</div></div>
+      <div class="stat"><div class="n" id="sTips">€0</div><div class="l">24 saat bahşiş</div></div>
+      <div class="stat"><div class="n" id="sTipsAll">€0</div><div class="l">Toplam bahşiş</div></div>
     </div>
 
     <div id="list"></div>
@@ -122,14 +150,30 @@
     appId: "1:699205281796:web:14d4c3d164ab8fcbc16d51"
   };
 
+  /* Kendi klasöründe duran bağımsız DJ sistemleri. Buraya sadece isim ve
+     panel linki yazılır; sayılar yine veritabanından otomatik gelir.
+     Buraya hiç yazılmasa bile DJ listede görünür — linkler <slug>/ olarak
+     tahmin edilir. */
+  const FOLDER_DJS = {
+    nick: {
+      name:   'NICK SMILES',
+      accent: '#C43BF5',
+      guest:  'nick/',
+      admin:  'nick/admin.html?k=EdIFUak9tnMfFp03',
+      qr:     ''
+    }
+  };
+
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
   const auth = firebase.auth();
 
   const $ = id => document.getElementById(id);
   const DAY = 24 * 60 * 60 * 1000;
-  const slugs = Object.keys(window.DJS);
   const listeners = [];
+  const open = {};          // hangi DJ'nin dökümü açık
+  let state = {};
+  let slugs = [];
 
   $('signIn').addEventListener('click', () => {
     $('gateMsg').textContent = '';
@@ -142,6 +186,10 @@
     });
   });
   $('signOut').addEventListener('click', () => auth.signOut());
+  $('rescan').addEventListener('click', () => {
+    const u = auth.currentUser;
+    if (u) discover(u).then(() => build(u));
+  });
 
   function stopAll(){
     listeners.forEach(([ref, cb]) => ref.off('value', cb));
@@ -162,60 +210,150 @@
     $('gate').hidden = true;
     $('app').hidden = false;
     $('whoami2').innerHTML = 'Platform sahibi: <b>' + (user.email || user.uid) + '</b> · UID: <b>' + user.uid + '</b>';
-    build(user);
+    discover(user).then(() => build(user));
+  }
+
+  /* --------------------------------------------------------------
+     DJ'leri veritabanından bul. djs/ altında bir klasör açılır açılmaz
+     (yeni bir DJ ilk isteğini alır almaz) burada kendiliğinden görünür —
+     djs.js'e elle yazmak gerekmez.
+     -------------------------------------------------------------- */
+  function discover(user){
+    const known = Object.keys(window.DJS || {});
+    return user.getIdToken()
+      .then(tok => fetch(firebaseConfig.databaseURL + '/djs.json?shallow=true&auth=' + tok))
+      .then(r => r.ok ? r.json() : null)
+      .then(obj => {
+        const found = obj ? Object.keys(obj) : [];
+        const all = known.slice();
+        found.forEach(s => { if (all.indexOf(s) === -1) all.push(s); });
+        slugs = all;
+      })
+      .catch(e => {
+        console.warn('DJ taraması başarısız:', e);
+        slugs = known;
+      });
+  }
+
+  /* Kayıtta olmayan DJ'ler için makul varsayılanlar. */
+  function meta(slug){
+    const reg = (window.DJS || {})[slug];
+    if (reg) return {
+      name: reg.name, accent: reg.accent || '#888',
+      guest: 'index.html?dj=' + slug,
+      admin: 'admin.html?dj=' + slug + (reg.panelKey ? '&k=' + reg.panelKey : ''),
+      qr:    'qr.html?dj=' + slug,
+      inRegistry: true, ownerUid: reg.ownerUid
+    };
+    const f = FOLDER_DJS[slug] || {};
+    return {
+      name: f.name || slug.toUpperCase(),
+      accent: f.accent || '#7CF5B6',
+      guest: f.guest || (slug + '/'),
+      admin: f.admin || (slug + '/admin.html'),
+      qr:    ('qr' in f) ? f.qr : '',
+      inRegistry: false, ownerUid: ''
+    };
+  }
+
+  function clock(ts){
+    const d = new Date(ts), p = n => n < 10 ? '0' + n : '' + n;
+    return p(d.getDate()) + '.' + p(d.getMonth()+1) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+  }
+
+  function drawReqs(slug){
+    const box = document.getElementById('r-' + slug);
+    if (!box) return;
+    box.hidden = !open[slug];
+    if (!open[slug]) return;
+
+    const rows = (state[slug] && state[slug].rows) || [];
+    if (!rows.length){ box.innerHTML = '<div class="hint">Son 24 saatte istek yok.</div>'; return; }
+
+    box.innerHTML = '<div class="hint">Son 24 saat · ' + rows.length + ' istek</div>';
+    rows.forEach(r => {
+      const el = document.createElement('div');
+      el.className = 'row';
+      const st = r.rejected ? 'reddedildi' : (r.played ? 'çalındı' : 'bekliyor');
+      const cls = r.rejected ? 'rejected' : (r.played ? 'played' : '');
+      el.innerHTML = '<span class="ts"></span><span class="song"></span>' +
+                     '<span class="st ' + cls + '"></span>' +
+                     '<span class="amt"></span>';
+      el.querySelector('.ts').textContent = clock(r.createdAt || Date.now());
+      el.querySelector('.song').textContent = (r.song || '—') + (r.room ? '  · ' + r.room : '');
+      el.querySelector('.st').textContent = st;
+      el.querySelector('.amt').textContent = (r.tipStatus === 'paid' && r.amount) ? '€' + r.amount : '';
+      box.appendChild(el);
+    });
   }
 
   function build(user){
     stopAll();
+    state = {};
     $('sDjs').textContent = slugs.length;
-    const state = {};
     $('list').innerHTML = '';
 
     slugs.forEach(slug => {
-      const d = window.DJS[slug];
-      state[slug] = { open: 0, today: 0, tips: 0, live: false };
+      const d = meta(slug);
+      state[slug] = { open: 0, today: 0, tips: 0, tipsAll: 0, rows: [] };
 
       const card = document.createElement('div');
       card.className = 'dj';
       card.innerHTML =
         '<div class="dj-head">' +
-          '<span class="dot" style="background:' + (d.accent || '#888') + '"></span>' +
-          '<span class="dj-name">' + d.name + '</span>' +
-          '<span class="dj-slug">?dj=' + slug + '</span>' +
+          '<span class="dot" style="background:' + d.accent + '"></span>' +
+          '<span class="dj-name"></span>' +
+          '<span class="dj-slug">djs/' + slug + '</span>' +
+          (d.inRegistry ? '' : '<span class="tag new">otomatik bulundu</span>') +
           '<div class="dj-nums">' +
             '<div><b id="o-' + slug + '">0</b>bekleyen</div>' +
-            '<div><b id="t-' + slug + '">0</b>bugün</div>' +
+            '<div><b id="t-' + slug + '">0</b>24 saat</div>' +
             '<div><b id="p-' + slug + '">€0</b>bahşiş</div>' +
           '</div>' +
         '</div>' +
         '<div class="dj-links">' +
-          '<a href="index.html?dj=' + slug + '" target="_blank">Misafir sayfası</a>' +
-          '<a href="admin.html?dj=' + slug + '" target="_blank">DJ paneli</a>' +
-          '<a href="qr.html?dj=' + slug + '" target="_blank">QR üret</a>' +
+          '<a href="' + d.guest + '" target="_blank">Misafir sayfası</a>' +
+          '<a href="' + d.admin + '" target="_blank">DJ paneli</a>' +
+          (d.qr ? '<a href="' + d.qr + '" target="_blank">QR üret</a>' : '') +
+          '<button type="button" id="b-' + slug + '">▸ İstekleri göster</button>' +
         '</div>' +
-        (d.ownerUid ? '' :
+        '<div class="reqs" id="r-' + slug + '" hidden></div>' +
+        (d.inRegistry && !d.ownerUid ?
           '<div class="warn">Bu DJ\'nin hesabı henüz tanımlı değil (<code>ownerUid</code> boş) — ' +
-          'paneline sadece sen girebilirsin. DJ bir kez giriş yapınca UID\'sini djs.js\'e yaz.</div>');
+          'paneline sadece sen girebilirsin. DJ bir kez giriş yapınca UID\'sini djs.js\'e yaz.</div>' : '');
+      card.querySelector('.dj-name').textContent = d.name;
       $('list').appendChild(card);
+
+      const btn = document.getElementById('b-' + slug);
+      btn.addEventListener('click', () => {
+        open[slug] = !open[slug];
+        btn.textContent = (open[slug] ? '▾' : '▸') + ' İstekleri göster';
+        drawReqs(slug);
+      });
 
       const ref = db.ref(window.djRoot(slug) + '/requests');
       const cb = ref.on('value', snap => {
-        let open = 0, today = 0, tips = 0;
+        let o = 0, t = 0, tip = 0, tipAll = 0;
+        const rows = [];
         const cutoff = Date.now() - DAY;
         snap.forEach(ch => {
           const v = ch.val() || {};
           if (v.removed) return;
-          if (!v.played && !v.rejected) open++;
+          if (!v.played && !v.rejected) o++;
+          if (v.tipStatus === 'paid') tipAll += Number(v.amount) || 0;
           if ((v.createdAt || 0) > cutoff){
-            today++;
-            if (v.tipStatus === 'paid') tips += Number(v.amount) || 0;
+            t++;
+            if (v.tipStatus === 'paid') tip += Number(v.amount) || 0;
+            rows.push(v);
           }
         });
-        state[slug] = { open, today, tips };
-        const o = $('o-' + slug), t = $('t-' + slug), p = $('p-' + slug);
-        if (o) o.textContent = open;
-        if (t) t.textContent = today;
-        if (p) p.textContent = '€' + tips;
+        rows.sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
+        state[slug] = { open: o, today: t, tips: tip, tipsAll: tipAll, rows: rows };
+        const eo = $('o-' + slug), et = $('t-' + slug), ep = $('p-' + slug);
+        if (eo) eo.textContent = o;
+        if (et) et.textContent = t;
+        if (ep) ep.textContent = '€' + tip;
+        drawReqs(slug);
         totals();
       }, err => {
         console.warn('Read failed for ' + slug + ':', err && err.code);
@@ -223,14 +361,18 @@
       listeners.push([ref, cb]);
     });
 
-    function totals(){
-      let o = 0, t = 0, p = 0;
-      Object.values(state).forEach(v => { o += v.open || 0; t += v.today || 0; p += v.tips || 0; });
-      $('sOpen').textContent = o;
-      $('sToday').textContent = t;
-      $('sTips').textContent = '€' + p;
-    }
     totals();
+  }
+
+  function totals(){
+    let o = 0, t = 0, p = 0, pa = 0;
+    Object.values(state).forEach(v => {
+      o += v.open || 0; t += v.today || 0; p += v.tips || 0; pa += v.tipsAll || 0;
+    });
+    $('sOpen').textContent = o;
+    $('sToday').textContent = t;
+    $('sTips').textContent = '€' + p;
+    $('sTipsAll').textContent = '€' + pa;
   }
 
   auth.onAuthStateChanged(user => {
@@ -238,7 +380,8 @@
 
     // The database decides who the owner is, not this file. If the rules
     // let this account read a DJ's queue, it belongs here.
-    db.ref(window.djRoot(slugs[0]) + '/requests').limitToLast(1).once('value')
+    const probe = Object.keys(window.DJS || {})[0] || 'flo';
+    db.ref(window.djRoot(probe) + '/requests').limitToLast(1).once('value')
       .then(() => unlock(user))
       .catch(e => {
         console.warn('Access denied:', e && e.code);
