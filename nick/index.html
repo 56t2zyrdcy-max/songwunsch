@@ -21,19 +21,14 @@
     color:var(--foam);font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;line-height:1.55}
   .wrap{max-width:440px;margin:0 auto}
 
-  .vinyl{width:132px;height:132px;margin:6px auto 20px;border-radius:50%;position:relative;
-    background:conic-gradient(from 0deg,#15101f,#241634,#15101f,#241634,#15101f);
-    box-shadow:0 0 0 1px rgba(255,255,255,.08),0 18px 46px rgba(196,59,245,.22);
-    animation:spin 9s linear infinite}
-  .vinyl::after{content:'';position:absolute;inset:0;border-radius:50%;
-    background:repeating-radial-gradient(circle at 50% 50%,rgba(255,255,255,.045) 0 1px,transparent 1px 5px)}
-  .vinyl img{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
-    width:56%;height:56%;border-radius:50%;object-fit:contain;padding:9px;z-index:2;
-    background:#0B0713;box-shadow:0 0 0 3px rgba(196,59,245,.55)}
-  @keyframes spin{to{transform:rotate(360deg)}}
-  @media (prefers-reduced-motion:reduce){.vinyl{animation:none}}
-
-  .lockup{display:block;width:min(300px,84%);margin:0 auto 10px}
+  .hero{position:relative;border-radius:20px;overflow:hidden;margin:2px 0 18px;
+    box-shadow:0 18px 46px rgba(196,59,245,.20),0 0 0 1px rgba(246,242,251,.10)}
+  .hero img.ph{display:block;width:100%;height:auto}
+  .hero::after{content:'';position:absolute;left:0;right:0;bottom:0;height:58%;
+    background:linear-gradient(to bottom,rgba(8,6,15,0) 0%,rgba(8,6,15,.55) 45%,rgba(8,6,15,.94) 100%)}
+  .hero .lockup{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);
+    width:min(280px,74%);z-index:2;margin:0;filter:drop-shadow(0 4px 14px rgba(0,0,0,.55))}
+  .lockup{display:block}
   .langbar{display:flex;justify-content:center;gap:6px;margin:0 0 16px}
   .langbar button{padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:transparent;
     color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:1.6px;cursor:pointer}
@@ -69,15 +64,24 @@
   @keyframes blink{50%{opacity:.25}}
   .reaction{font-size:44px;margin:10px 0 2px}
 
-  footer{margin-top:26px;text-align:center;color:#5E5670;font-size:11px;
+  .social{display:flex;justify-content:center;margin-top:22px}
+  .social a{display:inline-flex;align-items:center;gap:9px;padding:11px 18px;border-radius:999px;
+    border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--foam);
+    text-decoration:none;font-size:14px;font-weight:600;transition:border-color .2s,background .2s}
+  .social a:hover{border-color:var(--accent);background:rgba(196,59,245,.12)}
+  .social svg{width:18px;height:18px;flex:none}
+
+  footer{margin-top:18px;text-align:center;color:#5E5670;font-size:11px;
     font-family:'JetBrains Mono',monospace;letter-spacing:1.5px;text-transform:uppercase}
 </style>
 </head>
 <body>
 <div class="wrap">
 
-  <div class="vinyl"><img id="markImg" alt=""></div>
-  <img class="lockup" id="fullImg" alt="NICK SMILES">
+  <div class="hero">
+    <img class="ph" id="heroImg" alt="NICK SMILES">
+    <img class="lockup" id="fullImg" alt="NICK SMILES">
+  </div>
   <div class="langbar">
     <button id="langDe" type="button">DE</button>
     <button id="langEn" type="button">EN</button>
@@ -101,6 +105,17 @@
     <button class="ghost" id="again" hidden>Neuen Wunsch senden</button>
   </div>
 
+  <div class="social">
+    <a href="https://www.instagram.com/nicksmilesmusic" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2.5" y="2.5" width="19" height="19" rx="5.5"></rect>
+        <circle cx="12" cy="12" r="4.2"></circle>
+        <circle cx="17.6" cy="6.4" r="1.1" fill="currentColor" stroke="none"></circle>
+      </svg>
+      <span>@nicksmilesmusic</span>
+    </a>
+  </div>
+
   <footer>NICK SMILES · SONGWUNSCH</footer>
 </div>
 
@@ -115,9 +130,9 @@
 
   /* ---------- logos ---------- */
   try{
-    document.getElementById('markImg').src = window.NICK_IMG.full;
+    document.getElementById('heroImg').src = window.NICK_IMG.hero;
     document.getElementById('fullImg').src = window.NICK_IMG.full;
-    var ic=document.createElement('link'); ic.rel='icon'; ic.href=window.NICK_IMG.mark;
+    var ic=document.createElement('link'); ic.rel='icon'; ic.href=window.NICK_IMG.full;
     document.head.appendChild(ic);
   }catch(e){}
 
