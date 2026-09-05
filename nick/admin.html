@@ -19,7 +19,7 @@
   .wrap{max-width:560px;margin:0 auto}
 
   header{display:flex;align-items:center;gap:12px;margin-bottom:16px}
-  header img{width:40px;height:40px;border-radius:50%;object-fit:cover;object-position:50% 30%;box-shadow:0 0 0 2px rgba(196,59,245,.5)}
+  header img{width:44px;height:44px;border-radius:50%;object-fit:cover;object-position:50% 22%;box-shadow:0 0 0 2px rgba(196,59,245,.5)}
   header h1{font-family:'Anton',sans-serif;font-weight:400;font-size:19px;margin:0;letter-spacing:.6px}
   header .st{margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1.6px;
              text-transform:uppercase;color:var(--muted)}
@@ -82,14 +82,14 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="img.js?v=1"></script>
+<script src="img.js?v=3"></script>
 <script src="dj.js?v=1"></script>
 <script>
 (function(){
   'use strict';
   var $ = function(id){ return document.getElementById(id); };
   var gate = $('gate'), gateMsg = $('gateMsg'), app = $('app');
-  try{ $('markImg').src = window.NICK_IMG.mark; }catch(e){}
+  try{ $('markImg').src = window.NICK_IMG.hero; }catch(e){}
 
   function block(text){ gate.hidden = false; app.hidden = true;
     gate.querySelector('h2').textContent = 'Kein Zugriff'; gateMsg.textContent = text; }
