@@ -64,7 +64,7 @@
   @keyframes blink{50%{opacity:.25}}
   .reaction{font-size:44px;margin:10px 0 2px}
 
-  .social{display:flex;justify-content:center;margin-top:22px}
+  .social{display:flex;justify-content:center;margin:-4px 0 14px}
   .social a{display:inline-flex;align-items:center;gap:9px;padding:11px 18px;border-radius:999px;
     border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--foam);
     text-decoration:none;font-size:14px;font-weight:600;transition:border-color .2s,background .2s}
@@ -82,6 +82,18 @@
     <img class="ph" id="heroImg" alt="NICK SMILES">
     <img class="lockup" id="fullImg" alt="NICK SMILES">
   </div>
+
+  <div class="social">
+    <a href="https://www.instagram.com/nicksmilesmusic" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2.5" y="2.5" width="19" height="19" rx="5.5"></rect>
+        <circle cx="12" cy="12" r="4.2"></circle>
+        <circle cx="17.6" cy="6.4" r="1.1" fill="currentColor" stroke="none"></circle>
+      </svg>
+      <span>@nicksmilesmusic</span>
+    </a>
+  </div>
+
   <div class="langbar">
     <button id="langDe" type="button">DE</button>
     <button id="langEn" type="button">EN</button>
@@ -103,17 +115,6 @@
     <div class="song" id="sentSong"></div>
     <div class="sub" id="sentSub"><span class="pulse"></span>Nick sieht deinen Wunsch.</div>
     <button class="ghost" id="again" hidden>Neuen Wunsch senden</button>
-  </div>
-
-  <div class="social">
-    <a href="https://www.instagram.com/nicksmilesmusic" target="_blank" rel="noopener">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="2.5" y="2.5" width="19" height="19" rx="5.5"></rect>
-        <circle cx="12" cy="12" r="4.2"></circle>
-        <circle cx="17.6" cy="6.4" r="1.1" fill="currentColor" stroke="none"></circle>
-      </svg>
-      <span>@nicksmilesmusic</span>
-    </a>
   </div>
 
   <footer>NICK SMILES · SONGWUNSCH</footer>
