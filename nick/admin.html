@@ -4,256 +4,738 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NICK SMILES — DJ-Panel</title>
-<meta name="theme-color" content="#07060C">
-<meta name="robots" content="noindex,nofollow">
-
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
-  :root{ --accent:#C43BF5; --accent2:#7A46E8; --top:#1A0A2E; --base:#07060C;
-         --foam:#F6F2FB; --muted:#948AA9; --panel:rgba(255,255,255,.05);
-         --line:rgba(246,242,251,.13); --ok:#7CF5B6; --bad:#FF7A8A; }
-  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-  body{margin:0;padding:18px 14px 70px;min-height:100vh;
-       background:radial-gradient(ellipse at top,var(--top) 0%,var(--base) 60%) no-repeat,var(--base);
-       color:var(--foam);font-family:'Inter',-apple-system,sans-serif}
-  .wrap{max-width:560px;margin:0 auto}
+  :root{
+    --navy:#0B0709;
+    --teal:#26080F;
+    --coral:#E4032E;
+    --brass:#C9A15C;
+    --foam:#F7F4FA;
+    --slate:#A38B90;
+    --green:#8FD9A8;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    min-height:100vh;
+    background:radial-gradient(ellipse at top, var(--teal) 0%, var(--navy) 60%);
+    font-family:'Inter', sans-serif;
+    color:var(--foam);
+    padding:24px 16px 80px;
+  }
+  .wrap{ max-width:760px; margin:0 auto; }
 
-  header{display:flex;align-items:center;gap:12px;margin-bottom:16px}
-  header img{width:44px;height:44px;border-radius:50%;object-fit:cover;object-position:50% 22%;box-shadow:0 0 0 2px rgba(196,59,245,.5)}
-  header h1{font-family:'Anton',sans-serif;font-weight:400;font-size:19px;margin:0;letter-spacing:.6px}
-  header .st{margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1.6px;
-             text-transform:uppercase;color:var(--muted)}
-  header .st b{color:var(--ok)} header .st b.off{color:var(--bad)}
+  header{
+    display:flex; align-items:flex-end; justify-content:space-between;
+    flex-wrap:wrap; gap:16px; margin-bottom:22px;
+  }
+  .eyebrow{
+    font-family:'JetBrains Mono', monospace; font-size:11px; letter-spacing:3px;
+    color:var(--coral); margin:0 0 8px; text-transform:uppercase;
+  }
+  .eyebrow .dot{
+    display:inline-block; width:6px;height:6px; border-radius:50%;
+    background:var(--coral); margin-right:6px; animation:pulse 1.6s ease-in-out infinite;
+  }
+  .eyebrow.offline{ color:#FF7A7A; }
+  .eyebrow.offline .dot{ background:#FF7A7A; animation:none; }
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
+  h1{
+    font-family:'Big Shoulders Display', sans-serif; font-weight:800; font-size:34px;
+    letter-spacing:0.5px; margin:0; text-transform:uppercase;
+  }
 
-  .bar{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
-  .tab{padding:9px 14px;border-radius:999px;border:1px solid var(--line);background:transparent;
-       color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:1.4px;
-       text-transform:uppercase;cursor:pointer}
-  .tab.on{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#12071C;border-color:transparent;font-weight:700}
-  .tab.snd{margin-left:auto}
+  .stats{ display:flex; gap:10px; }
+  .stat{
+    background:var(--teal); border:1px solid rgba(201,161,92,0.3); border-radius:12px;
+    padding:10px 16px; text-align:center; min-width:84px;
+  }
+  .stat .num{
+    font-family:'Big Shoulders Display', sans-serif; font-weight:800; font-size:24px; color:var(--coral);
+  }
+  .stat .lbl{ font-family:'JetBrains Mono', monospace; font-size:10px; letter-spacing:1.5px; color:var(--slate); text-transform:uppercase; }
 
-  .item{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px 15px;margin-bottom:10px;
-        transition:opacity .2s}
-  .item.played{opacity:.42}
-  .item.rejected{border-color:rgba(255,122,138,.4)}
-  .item .song{font-size:16px;font-weight:600;word-break:break-word}
-  .item .meta{font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:1.4px;
-              text-transform:uppercase;color:var(--muted);margin-top:5px}
-  .acts{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
-  .acts button{flex:1;min-width:52px;padding:11px 0;border-radius:11px;border:1px solid var(--line);
-               background:rgba(0,0,0,.28);color:var(--foam);font-size:16px;cursor:pointer}
-  .acts button.on{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#12071C;border-color:transparent}
-  .acts button.del.arm{border-color:var(--bad);color:var(--bad)}
-  .react-picker{position:absolute;right:12px;bottom:12px;z-index:5;display:flex;gap:4px;flex-wrap:wrap;justify-content:center;max-width:236px;background:#1A1024;border:1px solid rgba(196,59,245,.45);border-radius:12px;padding:7px 9px;box-shadow:0 10px 24px -8px rgba(0,0,0,.85)}
-  .react-opt{background:none;border:none;font-size:21px;cursor:pointer;padding:2px 4px;border-radius:6px;line-height:1}
-  .react-opt:hover{background:rgba(255,255,255,.10)}
+  .toolbar{
+    display:flex; gap:10px; margin-bottom:18px; flex-wrap:wrap;
+  }
+  .filter-btn{
+    font-family:'JetBrains Mono', monospace; font-size:12px; letter-spacing:1px;
+    padding:8px 14px; border-radius:20px; border:1px solid rgba(244,247,246,0.2);
+    background:transparent; color:var(--foam); cursor:pointer;
+  }
+  .filter-btn.active{ background:var(--coral); border-color:var(--coral); color:var(--navy); }
+  .filter-btn:focus-visible{ outline:2px solid var(--coral); outline-offset:2px; }
 
-  .empty{text-align:center;color:var(--muted);padding:44px 10px;font-size:14px}
-  .gate{max-width:400px;margin:70px auto;background:var(--panel);border:1px solid var(--line);
-        border-radius:18px;padding:26px;text-align:center}
-  .gate h2{font-family:'Anton',sans-serif;font-weight:400;margin:0 0 8px}
-  .gate p{color:var(--muted);font-size:14px;margin:0}
-  .hint{margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1.6px;
-        text-transform:uppercase;color:var(--muted);text-align:center}
+  #soundToggle{
+    margin-left:auto;
+    font-family:'JetBrains Mono', monospace; font-size:12px;
+    padding:8px 14px; border-radius:20px; border:1px solid rgba(201,161,92,0.4);
+    background:transparent; color:var(--brass); cursor:pointer;
+  }
+
+  #queue{ display:flex; flex-direction:column; gap:12px; }
+
+  .req{
+    position:relative;
+    display:flex; align-items:center; gap:16px;
+    background:var(--teal); border-radius:14px; border:1px solid rgba(201,161,92,0.3);
+    padding:16px 18px;
+    box-shadow:0 12px 24px -18px rgba(0,0,0,0.7);
+    animation:slideIn 0.25s ease;
+  }
+  @keyframes slideIn{ from{ opacity:0; transform:translateY(-6px);} to{opacity:1; transform:translateY(0);} }
+  .req.played{ opacity:0.45; }
+
+  .req-main{ flex:1; min-width:0; }
+  .req-song{ font-size:16px; font-weight:600; margin:0 0 4px; word-break:break-word; }
+  .req-meta{ font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--slate); }
+  .cabin{
+    display:inline-block; font-family:'JetBrains Mono', monospace; font-size:11px; font-weight:700;
+    padding:1px 7px; border-radius:6px; margin-right:6px;
+    background:rgba(124,147,163,0.18); color:inherit;
+  }
+  .cabin.repeat{ background:rgba(255,88,88,0.18); color:#FF7A7A; }
+
+  .req-tip{
+    font-family:'Big Shoulders Display', sans-serif; font-weight:800; font-size:22px;
+    padding:2px 12px; border-radius:8px; min-width:56px; text-align:center;
+  }
+  .req-tip.paid{ color:var(--navy); background:var(--coral); }
+  .req-tip.none{ color:var(--slate); border:1px dashed rgba(124,147,163,0.5); background:transparent; }
+
+  .req-actions{ display:flex; gap:6px; }
+  .icon-btn{
+    width:34px; height:34px; border-radius:9px; border:1px solid rgba(244,247,246,0.2);
+    background:transparent; color:var(--foam); cursor:pointer; font-size:15px; line-height:1;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .icon-btn:hover{ border-color:var(--coral); }
+  .icon-btn.done{ border-color:var(--green); color:var(--green); }
+  .icon-btn:focus-visible{ outline:2px solid var(--coral); outline-offset:2px; }
+
+  .react-picker{
+    position:absolute; right:10px; bottom:10px; z-index:5;
+    display:flex; gap:4px; align-items:center; flex-wrap:wrap;
+    justify-content:center; max-width:240px;
+    background:var(--navy); border:1px solid rgba(201,161,92,0.45);
+    border-radius:10px; padding:6px 8px;
+    box-shadow:0 8px 20px -8px rgba(0,0,0,0.8);
+  }
+  .react-opt{
+    background:none; border:none; font-size:20px; cursor:pointer; padding:2px 4px;
+    border-radius:6px; line-height:1;
+  }
+  .react-opt:hover{ background:rgba(255,255,255,0.08); }
+
+  .empty{
+    text-align:center; padding:60px 20px; color:var(--slate);
+  }
+
+  /* ---- past-requests history ---- */
+  .history-wrap{ margin-top:26px; }
+  #historyToggle{
+    width:100%; font-family:'JetBrains Mono', monospace; font-size:12px; letter-spacing:1px;
+    padding:13px 16px; border-radius:12px; border:1px solid rgba(201,161,92,0.4);
+    background:transparent; color:var(--brass); cursor:pointer; text-align:center;
+  }
+  #historyToggle:hover{ border-color:var(--coral); color:var(--foam); }
+  #historyToggle:focus-visible{ outline:2px solid var(--coral); outline-offset:2px; }
+  .history-stats{
+    font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--slate);
+    margin:14px 2px 4px; letter-spacing:1px;
+  }
+  .hist-day{
+    font-family:'JetBrains Mono', monospace; font-size:11px; letter-spacing:2px;
+    color:var(--coral); text-transform:uppercase; margin:18px 2px 8px;
+  }
+  .hist-row{
+    display:flex; align-items:center; gap:10px;
+    background:rgba(18,52,67,0.55); border:1px solid rgba(201,161,92,0.15);
+    border-radius:9px; padding:8px 12px; margin-bottom:6px; font-size:13px;
+  }
+  .hist-time{ font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--slate); min-width:44px; }
+  .hist-song{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .hist-tip{ font-family:'JetBrains Mono', monospace; font-size:12px; font-weight:700; min-width:38px; text-align:right; }
+  .hist-tip.paid{ color:var(--coral); }
+  .hist-tip.none{ color:var(--slate); }
+  .empty .big{ font-family:'Big Shoulders Display', sans-serif; font-size:28px; color:var(--foam); margin-bottom:6px; text-transform:uppercase; }
+
+  .config-warning{
+    background:rgba(255,107,74,0.12);
+    border:1px solid rgba(255,107,74,0.4);
+    color:var(--foam);
+    border-radius:12px;
+    padding:12px 14px;
+    font-size:12.5px;
+    line-height:1.5;
+    margin-bottom:18px;
+  }
+  .config-warning b{ color:var(--coral); }
+
+  /* ---- Google sign-in gate ---- */
+  #authGate{
+    position:fixed; inset:0; z-index:50;
+    display:flex; align-items:center; justify-content:center; padding:24px;
+    background:rgba(6,10,14,0.96); backdrop-filter:blur(6px);
+  }
+  #authGate[hidden]{ display:none; }
+  .gate-card{
+    max-width:360px; width:100%; text-align:center;
+    border:1px solid rgba(244,247,246,0.15); border-radius:16px;
+    padding:30px 24px; background:rgba(255,255,255,0.03);
+  }
+  .gate-card .big{
+    font-family:'Big Shoulders Display', sans-serif; font-size:30px;
+    text-transform:uppercase; color:var(--foam); margin-bottom:8px; line-height:1.05;
+  }
+  .gate-card p{ font-size:13px; color:var(--slate); line-height:1.55; margin-bottom:22px; }
+  #gateMsg{ margin-top:16px; font-size:12.5px; color:var(--coral); min-height:18px; margin-bottom:0; }
 </style>
 </head>
 <body>
 
-<div class="gate" id="gate">
-  <h2>Moment …</h2>
-  <p id="gateMsg">Verbindung wird aufgebaut.</p>
+<!-- No login here on purpose: the DJ opens their bookmark and the queue is
+     simply there. The key in the link is what keeps strangers out, so this
+     panel only complains when the link is incomplete. -->
+<div id="authGate" hidden>
+  <div class="gate-card">
+    <div class="big">Falscher Link</div>
+    <p id="gateWhy">Dieser Link ist nicht vollständig. Öffne den Panel-Link, den du vom Veranstalter bekommen hast — er endet auf <code>&amp;k=…</code>.</p>
+    <p id="gateMsg"></p>
+  </div>
 </div>
 
-<div class="wrap" id="app" hidden>
+<div class="wrap">
   <header>
-    <img id="markImg" alt="">
-    <h1>NICK SMILES · PANEL</h1>
-    <div class="st">Live <b id="conn">•</b></div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <img id="markImg" alt="" style="width:44px;height:44px;border-radius:50%;object-fit:cover;object-position:50% 22%;box-shadow:0 0 0 2px rgba(196,59,245,.5)">
+    <div>
+      <p class="eyebrow"><span class="dot" id="liveDot"></span><span id="liveText">Booth view</span></p>
+      <h1>Live Queue<span id="djName" style="display:block;font-size:13px;font-weight:600;letter-spacing:2px;color:var(--coral);text-transform:uppercase;margin-top:4px"></span></h1>
+    </div>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="num" id="statCount">0</div><div class="lbl">Requests</div></div>
+      <div class="stat" hidden><div class="num" id="statTips">€0</div><div class="lbl">Tips</div></div>
+    </div>
   </header>
 
-  <div class="bar">
-    <button class="tab on" data-f="all">Alle</button>
-    <button class="tab" data-f="open">Offen</button>
-    <button class="tab" data-f="played">Gespielt</button>
-    <button class="tab snd" id="sndBtn">🔔 Ton an</button>
+  <div id="configWarning" class="config-warning" hidden>
+    ⚠️ <b>Setup incomplete:</b> Firebase isn't connected yet, so this panel can't receive live requests. Paste your real firebaseConfig into this file to fix it.
   </div>
 
-  <div id="list"></div>
-  <div class="hint">✕ zweimal antippen = löschen · Wünsche unter 24 h sind gesperrt</div>
+  <div class="toolbar">
+    <button class="filter-btn active" data-filter="all">All</button>
+    <button class="filter-btn" data-filter="unplayed">Unplayed</button>
+    <button class="filter-btn" data-filter="paid">Tipped</button>
+    <button id="soundToggle" type="button">🔊 Sound on</button>
+
+  </div>
+
+  <div id="queue"></div>
+  <div class="empty" id="emptyState" hidden>
+    <div class="big">No requests yet</div>
+    <div>New song requests will appear here the moment a guest sends one.</div>
+  </div>
+
+  <div class="history-wrap">
+    <button id="historyToggle" type="button">▸ Past requests — last 30 days · <span id="historyCount">0</span></button>
+    <div id="historySection" hidden>
+      <div class="history-stats" id="historyStats"></div>
+      <div id="historyList"></div>
+    </div>
+  </div>
 </div>
 
+<!--
+  Paste the SAME firebaseConfig you used in guest.html so both pages
+  read and write to the same Realtime Database.
+-->
+<script src="dj.js?v=2"></script>
+<script src="img.js?v=3"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="img.js?v=3"></script>
-<script src="dj.js?v=1"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-check-compat.js"></script>
+<script>
+  // Public reCAPTCHA v3 site key for App Check. This belongs in the page
+  // source; the matching secret key lives only in the Firebase Console.
+  const RECAPTCHA_SITE_KEY = "";
+
+  // Nick Smiles runs as its own system in this folder, so there is no
+  // ?dj=... in the URL — the DJ is fixed and read from dj.js.
+  window.DJ = {
+    slug:      'nick',
+    name:      window.NICK.name,
+    accent:    '#C43BF5',
+    panelTop:  '#1A0B26',
+    panelBase: '#0B0710',
+    panelKey:  window.NICK.panelKey,
+    tips:      false
+  };
+  window.DJ_ROOT = window.NICK.root;
+
+  // Which Google account counts as the DJ is decided by the Realtime
+  // Database security rules, not by this file. This page simply tries to
+  // read the queue after sign-in: if the rules refuse, the account is not
+  // the DJ. That keeps the address out of this public repository.
+  const firebaseConfig = window.NICK.firebase;
+  let db = null;
+  let auth = null;
+  let firebaseReady = false;
+
+  // Google sign-in and reCAPTCHA both need a real http(s) origin. Opened
+  // straight from disk (file://) the browser reports the origin as "null",
+  // Firebase rejects it, and the booth can never unlock. Detected here so
+  // the page can explain itself instead of failing silently.
+  const NEEDS_SERVER = location.protocol !== 'http:' && location.protocol !== 'https:';
+
+  const isPlaceholder = Object.values(firebaseConfig).some(v => typeof v === 'string' && v.includes('YOUR_'));
+  const sdkLoaded = (typeof firebase !== 'undefined');
+  window.__boothFailure = isPlaceholder ? 'config' : (sdkLoaded ? '' : 'offline');
+
+  if (!isPlaceholder && sdkLoaded){
+    try{
+      firebase.initializeApp(firebaseConfig);
+
+      // App Check must be activated before any other Firebase call.
+      // Skipped on file:// — reCAPTCHA cannot run there and throws on
+      // every token refresh, which drowns the real error in the console.
+      if (firebase.appCheck && RECAPTCHA_SITE_KEY && !NEEDS_SERVER){
+        try{ firebase.appCheck().activate(RECAPTCHA_SITE_KEY, true); }
+        catch(e){ console.warn('App Check not active:', e && e.message); }
+      }
+
+      db = firebase.database();
+      auth = firebase.auth();
+      auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(() => {});
+      firebaseReady = true;
+    }catch(e){
+      console.error('Firebase init failed:', e);
+    }
+  } else if (!sdkLoaded){
+    console.error('Firebase SDK did not load — no internet, or the scripts are blocked.');
+  } else {
+    console.warn('Firebase config still has placeholder values — the queue will stay empty.');
+  }
+</script>
+
 <script>
 (function(){
-  'use strict';
-  var $ = function(id){ return document.getElementById(id); };
-  var gate = $('gate'), gateMsg = $('gateMsg'), app = $('app');
-  try{ $('markImg').src = window.NICK_IMG.hero; }catch(e){}
+  // Brand the panel before anything else. This has to run ahead of the
+  // connection check below, otherwise an offline panel shows the wrong
+  // DJ's name and colours.
+  (function brandPanel(){
+    const d = window.DJ;
+    if (!d) return;
+    const el = document.getElementById('djName');
+    if (el) el.textContent = d.name;
+    try{ document.getElementById('markImg').src = window.NICK_IMG.hero; }catch(e){}
+    document.title = d.name + ' \u2014 Live Queue (Admin)';
+    const root = document.documentElement.style;
+    if (d.accent)    root.setProperty('--coral', d.accent);
+    if (d.panelTop)  root.setProperty('--teal', d.panelTop);
+    if (d.panelBase) root.setProperty('--navy', d.panelBase);
+  })();
 
-  function block(text){ gate.hidden = false; app.hidden = true;
-    gate.querySelector('h2').textContent = 'Kein Zugriff'; gateMsg.textContent = text; }
+  const queueEl = document.getElementById('queue');
+  const emptyState = document.getElementById('emptyState');
+  const statCount = document.getElementById('statCount');
+  const statTips = document.getElementById('statTips');
+  const soundToggle = document.getElementById('soundToggle');
+  const filterButtons = document.querySelectorAll('.filter-btn');
 
-  /* ---------- panel key ---------- */
-  var key = '';
-  try{ key = new URLSearchParams(location.search).get('k') || ''; }catch(e){}
-  if (window.NICK.panelKey && key !== window.NICK.panelKey){
-    block('Dieser Link ist nicht vollständig. Nimm den Link aus deinem Lesezeichen.');
+  let requests = {};   // id -> record
+  let filter = 'all';
+  let soundOn = true;
+  let loadedInitial = false;
+
+  // Simple beep using Web Audio API — no external sound file needed.
+  // One shared AudioContext instead of one per beep. Each context holds an
+  // audio thread that is never released, and Safari/iOS refuses new ones
+  // after a handful — so a long night would end with a silent booth.
+  let audioCtx = null;
+  function playBeep(){
+    if (!soundOn) return;
+    try{
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      if (!audioCtx) audioCtx = new AC();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const ctx = audioCtx;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = 880;
+      gain.gain.setValueAtTime(0.15, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.4);
+    }catch(e){ console.warn('Beep failed', e); }
+  }
+
+  document.getElementById('historyToggle').addEventListener('click', () => {
+    historyOpen = !historyOpen;
+    document.getElementById('historySection').hidden = !historyOpen;
+    const n = document.getElementById('historyCount').textContent;
+    document.getElementById('historyToggle').innerHTML =
+      (historyOpen ? '▾' : '▸') + ' Past requests — last 30 days · <span id="historyCount">' + n + '</span>';
+    render();
+  });
+
+  soundToggle.addEventListener('click', () => {
+    soundOn = !soundOn;
+    soundToggle.textContent = soundOn ? '🔊 Sound on' : '🔇 Sound off';
+  });
+
+  filterButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      filterButtons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      filter = btn.dataset.filter;
+      render();
+    });
+  });
+
+  function timeAgo(ts){
+    const diff = Math.max(0, Date.now() - ts);
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'just now';
+    if (mins < 60) return mins + 'm ago';
+    const hrs = Math.floor(mins / 60);
+    return hrs + 'h ' + (mins % 60) + 'm ago';
+  }
+
+  const DAY_MS = 24 * 60 * 60 * 1000;
+  let historyOpen = false;
+
+  function render(){
+    const nowTs = Date.now();
+    const all = Object.entries(requests)
+      .sort((a,b) => b[1].createdAt - a[1].createdAt);
+    // The live queue shows the last 24 hours; everything older lives in
+    // the collapsible history below.
+    const list = all.filter(([, r]) => !r.removed && nowTs - r.createdAt < DAY_MS);
+    const history = all.filter(([, r]) => r.removed || nowTs - r.createdAt >= DAY_MS);
+
+    const filtered = list.filter(([id, r]) => {
+      if (filter === 'unplayed') return !r.played && !r.rejected;
+      if (filter === 'paid') return r.tipStatus === 'paid';
+      return true;
+    });
+
+    queueEl.innerHTML = '';
+    emptyState.hidden = filtered.length > 0;
+
+    // How many still-unplayed requests each cabin has in the queue right
+    // now — anything above one gets flagged so repeat senders are obvious.
+    const cabinCount = {};
+    list.forEach(([, r]) => {
+      if (r.played || !r.room) return;
+      const k = String(r.room).toUpperCase();
+      cabinCount[k] = (cabinCount[k] || 0) + 1;
+    });
+
+    filtered.forEach(([id, r]) => {
+      const cabin = r.room ? String(r.room).toUpperCase() : '';
+      const repeats = cabin ? (cabinCount[cabin] || 0) : 0;
+      const cabinChip = cabin
+        ? `<span class="cabin${repeats > 1 ? ' repeat' : ''}">Cabin ${escapeHtml(cabin)}${repeats > 1 ? ' ×' + repeats : ''}</span>`
+        : '';
+      const rejectedChip = r.rejected
+        ? '<span class="cabin" style="background:rgba(255,88,88,0.18);color:#FF7A7A">🚫 not suitable — guest notified</span>'
+        : '';
+      const reactionChip = r.reaction
+        ? '<span class="cabin" style="background:rgba(255,107,74,0.2);color:#FFB39C">' + escapeHtml(String(r.reaction)) + ' sent</span>'
+        : '';
+      const card = document.createElement('div');
+      card.className = 'req' + (r.played || r.rejected ? ' played' : '');
+      card.innerHTML = `
+        <div class="req-tip ${r.tipStatus === 'paid' ? 'paid' : 'none'}">
+          ${r.tipStatus === 'paid' ? '€' + r.amount : '—'}
+        </div>
+        <div class="req-main">
+          <p class="req-song">${escapeHtml(r.song)}</p>
+          <p class="req-meta">${reactionChip}${rejectedChip}${cabinChip}${timeAgo(r.createdAt)}${r.tipStatus === 'paid' ? ' · paid' : ' · no tip'}</p>
+        </div>
+        <div class="req-actions">
+          <button class="icon-btn ${r.played ? 'done' : ''}" data-action="toggle" data-id="${id}" title="${r.played ? 'Mark unplayed' : 'Mark played'}">${r.played ? '✓' : '▶'}</button>
+          <button class="icon-btn ${r.reaction ? 'done' : ''}" data-action="react" data-id="${id}" title="Send a reaction to the guest">♥</button>
+          <button class="icon-btn ${r.rejected ? 'done' : ''}" data-action="reject" data-id="${id}" title="${r.rejected ? 'Undo not-suitable' : 'Not suitable — notify guest'}">🚫</button>
+          <button class="icon-btn" data-action="delete" data-id="${id}" title="Remove">✕</button>
+        </div>
+      `;
+      queueEl.appendChild(card);
+    });
+
+    // Stats — tonight only
+    const count = list.length;
+    const tips = list.reduce((sum, [id, r]) => sum + (r.tipStatus === 'paid' ? Number(r.amount) : 0), 0);
+    statCount.textContent = count;
+    statTips.textContent = '€' + tips;
+
+    // History
+    document.getElementById('historyCount').textContent = history.length;
+    if (historyOpen) renderHistory(history);
+  }
+
+  function renderHistory(history){
+    const listEl = document.getElementById('historyList');
+    const statsEl = document.getElementById('historyStats');
+    const tips = history.reduce((sum, [, r]) => sum + (r.tipStatus === 'paid' ? Number(r.amount) : 0), 0);
+    statsEl.textContent = history.length + ' requests · €' + tips + ' tips';
+    if (!history.length){
+      listEl.innerHTML = '<div class="history-stats">Nothing older than 24 hours yet.</div>';
+      return;
+    }
+    let html = '', lastDay = '';
+    history.forEach(([id, r]) => {
+      const d = new Date(r.createdAt);
+      const day = d.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short' });
+      if (day !== lastDay){ html += '<div class="hist-day">' + day + '</div>'; lastDay = day; }
+      const time = String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+      const cabin = r.room ? ' <span style="color:var(--slate)">· ' + escapeHtml(String(r.room)) + '</span>' : '';
+      html += '<div class="hist-row">'
+        + '<span class="hist-time">' + time + '</span>'
+        + '<span class="hist-song">' + (r.removed ? '✕ ' : '') + (r.rejected ? '🚫 ' : '') + (r.reaction ? escapeHtml(String(r.reaction)) + ' ' : '') + escapeHtml(r.song || '') + cabin + '</span>'
+        + '<span class="hist-tip ' + (r.tipStatus === 'paid' ? 'paid' : 'none') + '">'
+        + (r.tipStatus === 'paid' ? '€' + Number(r.amount) : '—') + '</span>'
+        + '</div>';
+    });
+    listEl.innerHTML = html;
+  }
+
+  function escapeHtml(str){
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  queueEl.addEventListener('click', (e) => {
+    const btn = e.target.closest('.icon-btn');
+    if (!btn) return;
+    const id = btn.dataset.id;
+    if (btn.dataset.action === 'toggle'){
+      const current = requests[id];
+      db.ref(DJ_ROOT + '/requests/' + id + '/played').set(!current.played);
+    } else if (btn.dataset.action === 'react'){
+      // Small emoji picker — the chosen reaction pops up on the guest's
+      // phone in a fun animation. ✖ clears an already-sent reaction.
+      const card = btn.closest('.req');
+      const old = card.querySelector('.react-picker');
+      if (old){ old.remove(); return; }
+      const picker = document.createElement('div');
+      picker.className = 'react-picker';
+      ['❤️','🔥','🎉','👏','😁','🤔','😱','🫶','🤟','👍','👎','🤝🏻','✖'].forEach((em) => {
+        const b = document.createElement('button');
+        b.type = 'button'; b.className = 'react-opt'; b.textContent = em;
+        b.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          db.ref(DJ_ROOT + '/requests/' + id + '/reaction').set(em === '✖' ? null : em);
+          picker.remove();
+        });
+        picker.appendChild(b);
+      });
+      card.appendChild(picker);
+    } else if (btn.dataset.action === 'reject'){
+      // Marks the request as not suitable. The guest's page listens to this
+      // flag and shows a polite notice in the guest's own language.
+      const current = requests[id];
+      db.ref(DJ_ROOT + '/requests/' + id + '/rejected').set(current.rejected ? null : true);
+    } else if (btn.dataset.action === 'delete'){
+      // Two-tap remove. The record is not deleted — it is flagged and moves
+      // to the 30-day history below; the 30-day cleanup wipes it for real.
+      if (btn.dataset.armed === '1'){
+        db.ref(DJ_ROOT + '/requests/' + id + '/removed').set(true);
+        return;
+      }
+      btn.dataset.armed = '1';
+      btn.textContent = '?';
+      btn.style.borderColor = '#FF7A7A';
+      btn.style.color = '#FF7A7A';
+      btn.title = 'Tap again to remove';
+      setTimeout(() => {
+        if (!btn.isConnected) return;
+        btn.dataset.armed = '';
+        btn.textContent = '\u2715';
+        btn.style.borderColor = '';
+        btn.style.color = '';
+        btn.title = 'Remove';
+      }, 3000);
+    }
+  });
+
+  if (!firebaseReady || !db){
+    const warn = document.getElementById('configWarning');
+    if (window.__boothFailure === 'offline'){
+      warn.innerHTML = '\u26a0\ufe0f <b>No connection:</b> the Firebase scripts could not be ' +
+        'downloaded, so the queue cannot load. Your setup is fine \u2014 this is the ' +
+        'internet. Reconnect and reload the page.';
+    }
+    warn.hidden = false;
+    document.getElementById('authGate').hidden = true;
+    render();
     return;
   }
 
-  firebase.initializeApp(window.NICK.firebase);
-  var db = firebase.database();
-  var ROOT = window.NICK.root;
+  // Opened as a local file: Google sign-in cannot work, so say so plainly
+  // rather than leaving the DJ clicking a button that will never succeed.
+  // ---------------------------------------------------------------
+  //  Sign-in gate. The queue is only wired up once the DJ Google
+  //  account is signed in; the database rules enforce the same thing
+  //  server-side, so a curious guest editing this file gains nothing.
+  // ---------------------------------------------------------------
+  const authGate = document.getElementById('authGate');
+  const gateMsg  = document.getElementById('gateMsg');
 
-  var DAY_MS = 24 * 60 * 60 * 1000;
-  var filter = 'all', sound = false, first = true, seen = {}, data = {};
+  let queueRef = null;
 
-  /* ---------- session ---------- */
-  firebase.auth().signInAnonymously().catch(function(e){
-    console.error('Anonymous session failed:', e);
-    block('Keine Verbindung zur Datenbank. Internet prüfen und Seite neu laden.');
-  });
+  function stopQueue(){
+    if (queueRef){ queueRef.off(); queueRef = null; }
+    if (connRef){ connRef.off(); connRef = null; }
+    const liveText = document.getElementById('liveText');
+    const liveDot = document.getElementById('liveDot');
+    if (liveText) liveText.textContent = 'Booth view';
+    if (liveDot && liveDot.parentElement) liveDot.parentElement.classList.remove('offline');
+  }
 
-  firebase.auth().onAuthStateChanged(function(user){
-    if (!user) return;
-    db.ref(ROOT + '/requests').limitToLast(1).once('value').then(function(){
-      gate.hidden = true; app.hidden = false;
-      start();
-    }).catch(function(e){
-      console.warn('Queue read failed:', e && e.code);
-      block('Die Datenbank hat den Zugriff abgelehnt. Özkan Bescheid geben.');
-    });
-  });
-
-  /* ---------- live queue ---------- */
-  function start(){
-    db.ref('.info/connected').on('value', function(s){
-      var b = $('conn'); b.className = s.val() ? '' : 'off'; b.textContent = s.val() ? '•' : '×';
-    });
-
-    db.ref(ROOT + '/requests').orderByChild('createdAt').on('value', function(snap){
-      data = snap.val() || {};
-      var ids = Object.keys(data);
-      if (!first){
-        ids.forEach(function(id){
-          if (!seen[id] && !data[id].removed){ ping(); }
+  // Housekeeping: drop requests older than 30 DAYS whenever the DJ opens
+  // the panel — that window feeds the "Past requests" history. Paid
+  // requests are kept forever so the tip history stays intact.
+  function cleanupOld(){
+    const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    db.ref(DJ_ROOT + '/requests').orderByChild('createdAt').endAt(cutoff).once('value')
+      .then((snap) => {
+        let n = 0;
+        snap.forEach((child) => {
+          const r = child.val() || {};
+          if (r.tipStatus === 'paid') return;
+          db.ref(DJ_ROOT + '/requests/' + child.key).remove();
+          n++;
         });
-      }
-      ids.forEach(function(id){ seen[id] = true; });
-      first = false;
+        if (n) console.log('Cleanup: removed ' + n + ' request(s) older than 30 days.');
+      })
+      .catch((e) => console.warn('Cleanup skipped:', e && (e.code || e.message)));
+  }
+
+  // The guest page stamps two tiny nodes to enforce the per-cabin cooldown
+  // and the duplicate-song block. They are worthless after the night ends,
+  // so sweep anything older than 12 hours.
+  function cleanupGuardrail(){
+    const cutoff = Date.now() - 12 * 60 * 60 * 1000;
+    db.ref(DJ_ROOT + '/guardrail').once('value')
+      .then((snap) => {
+        const updates = {};
+        ['rooms', 'songs', 'devices'].forEach((bucket) => {
+          const node = snap.child(bucket);
+          node.forEach((child) => {
+            if (Number(child.val()) < cutoff) updates['guardrail/' + bucket + '/' + child.key] = null;
+          });
+        });
+        const n = Object.keys(updates).length;
+        if (n) return db.ref(DJ_ROOT).update(updates).then(() => console.log('Cleanup: cleared ' + n + ' guardrail entr(ies).'));
+      })
+      .catch((e) => console.warn('Guardrail cleanup skipped:', e && (e.code || e.message)));
+  }
+
+  // Live/offline badge in the header.
+  let connRef = null;
+  function watchConnection(){
+    if (connRef) return;
+    const liveDot = document.getElementById('liveDot');
+    const liveText = document.getElementById('liveText');
+    const eyebrow = liveDot && liveDot.parentElement;
+    if (!eyebrow) return;
+    connRef = db.ref('.info/connected');
+    connRef.on('value', (snap) => {
+      const online = snap.val() === true;
+      eyebrow.classList.toggle('offline', !online);
+      liveText.textContent = online ? 'Booth view · live' : 'Offline — queue may be stale';
+    });
+  }
+
+  function startQueue(){
+    if (queueRef) return;
+    watchConnection();
+    cleanupOld();
+    cleanupGuardrail();
+    const ref = db.ref(DJ_ROOT + '/requests');
+    queueRef = ref;
+
+    ref.once('value').then(() => { loadedInitial = true; }).catch(err => console.error('Firebase read error:', err));
+
+    ref.on('child_added', (snap) => {
+      requests[snap.key] = snap.val();
+      if (loadedInitial) playBeep();
+      render();
+    });
+
+    ref.on('child_changed', (snap) => {
+      requests[snap.key] = snap.val();
+      render();
+    });
+
+    ref.on('child_removed', (snap) => {
+      delete requests[snap.key];
       render();
     });
   }
 
-  /* ---------- sound ---------- */
-  var actx = null;
-  function ping(){
-    if (!sound) return;
-    try{
-      actx = actx || new (window.AudioContext || window.webkitAudioContext)();
-      var o = actx.createOscillator(), g = actx.createGain();
-      o.connect(g); g.connect(actx.destination);
-      o.type = 'sine'; o.frequency.value = 880;
-      g.gain.setValueAtTime(.0001, actx.currentTime);
-      g.gain.exponentialRampToValueAtTime(.25, actx.currentTime + .02);
-      g.gain.exponentialRampToValueAtTime(.0001, actx.currentTime + .35);
-      o.start(); o.stop(actx.currentTime + .36);
-    }catch(e){}
+  function block(why){
+    stopQueue();
+    authGate.hidden = false;
+    if (why) document.getElementById('gateWhy').textContent = why;
+    requests = {};
+    loadedInitial = false;
+    render();
   }
-  $('sndBtn').addEventListener('click', function(){
-    sound = !sound;
-    this.textContent = sound ? '🔔 Ton an' : '🔕 Ton aus';
-    this.classList.toggle('on', sound);
-    if (sound) ping();
-  });
-  $('sndBtn').textContent = '🔕 Ton aus';
 
-  /* ---------- filters ---------- */
-  Array.prototype.forEach.call(document.querySelectorAll('.tab[data-f]'), function(b){
-    b.addEventListener('click', function(){
-      Array.prototype.forEach.call(document.querySelectorAll('.tab[data-f]'), function(x){ x.classList.remove('on'); });
-      b.classList.add('on'); filter = b.dataset.f; render();
+  // ---------------------------------------------------------------
+  //  The panel opens with no login. Two things have to line up:
+  //  the key in the link, and an anonymous session with the database.
+  //  Nothing is typed and nothing is remembered — reopening the
+  //  bookmark is enough.
+  // ---------------------------------------------------------------
+  (function openBooth(){
+    let key = '';
+    try{ key = new URLSearchParams(location.search).get('k') || ''; }catch(e){}
+    const expected = window.DJ.panelKey || '';
+
+    if (expected && key !== expected){
+      block(key
+        ? 'Der Schlüssel in diesem Link stimmt nicht. Bitte den Panel-Link erneut vom Veranstalter anfordern.'
+        : 'Dieser Link ist nicht vollständig. Öffne den Panel-Link, den du bekommen hast — er endet auf \u0026k=…');
+      return;
+    }
+
+    authGate.hidden = true;
+
+    // A silent anonymous session — the guest page uses the same thing.
+    // The DJ never sees it happen.
+    firebase.auth().signInAnonymously().catch((e) => {
+      console.error('Anonymous session failed:', e);
+      gateMsg.textContent = '';
+      block('Keine Verbindung zur Datenbank. Prüfe das Internet und lade die Seite neu.');
     });
-  });
 
-  /* ---------- render ---------- */
-  function clock(ts){
-    var d = new Date(ts), p = function(n){ return n < 10 ? '0' + n : '' + n; };
-    return p(d.getHours()) + ':' + p(d.getMinutes());
-  }
-
-  function render(){
-    var list = $('list');
-    var rows = Object.keys(data).map(function(id){
-      var r = data[id] || {}; r._id = id; return r;
-    }).filter(function(r){ return !r.removed; })
-      .sort(function(a,b){ return (b.createdAt||0) - (a.createdAt||0); });
-
-    if (filter === 'open')   rows = rows.filter(function(r){ return !r.played; });
-    if (filter === 'played') rows = rows.filter(function(r){ return !!r.played; });
-
-    if (!rows.length){ list.innerHTML = '<div class="empty">Noch keine Wünsche.</div>'; return; }
-
-    list.innerHTML = '';
-    rows.forEach(function(r){
-      var el = document.createElement('div');
-      el.className = 'item' + (r.played ? ' played' : '') + (r.rejected ? ' rejected' : '');
-      var meta = clock(r.createdAt || Date.now());
-      if (r.rejected) meta += ' · abgelehnt';
-      if (r.reaction) meta += ' · ' + r.reaction;
-      el.innerHTML =
-        '<div class="song"></div><div class="meta">' + meta + '</div>' +
-        '<div class="acts">' +
-          '<button class="p" title="gespielt">▶</button>' +
-          '<button class="h" title="Reaktion">♥</button>' +
-          '<button class="r" title="passt nicht">🚫</button>' +
-          '<button class="del" title="löschen">✕</button>' +
-        '</div>';
-      el.querySelector('.song').textContent = r.song || '—';
-      if (r.played) el.querySelector('.p').classList.add('on');
-      if (r.rejected) el.querySelector('.r').classList.add('on');
-
-      var base = db.ref(ROOT + '/requests/' + r._id);
-      el.querySelector('.p').onclick = function(){ base.child('played').set(!r.played); };
-      if (r.reaction){ var hb = el.querySelector('.h'); hb.textContent = r.reaction; hb.classList.add('on'); }
-      el.querySelector('.h').onclick = function(){
-        var old = el.querySelector('.react-picker');
-        if (old){ old.remove(); return; }
-        var pick = document.createElement('div'); pick.className = 'react-picker';
-        ['❤️','🔥','🎉','👏','😁','🤔','😱','🫶','🤟','👍','👎','🤝🏻','✖'].forEach(function(em){
-          var b = document.createElement('button');
-          b.type = 'button'; b.className = 'react-opt'; b.textContent = em;
-          b.onclick = function(ev){ ev.stopPropagation(); base.child('reaction').set(em === '✖' ? null : em); pick.remove(); };
-          pick.appendChild(b);
+    firebase.auth().onAuthStateChanged((user) => {
+      if (!user) return;
+      db.ref(DJ_ROOT + '/requests').limitToLast(1).once('value')
+        .then(() => { authGate.hidden = true; startQueue(); render(); })
+        .catch((e) => {
+          console.warn('Queue read failed:', e && e.code);
+          block('Die Datenbank hat den Zugriff abgelehnt. Bitte den Veranstalter informieren.');
         });
-        el.appendChild(pick);
-      };
-      el.querySelector('.r').onclick = function(){ base.child('rejected').set(r.rejected ? null : true); };
-
-      var del = el.querySelector('.del'), armed = false, t = null;
-      del.onclick = function(){
-        if (!armed){
-          armed = true; del.classList.add('arm');
-          t = setTimeout(function(){ armed = false; del.classList.remove('arm'); }, 2500);
-          return;
-        }
-        clearTimeout(t);
-        if (Date.now() - (r.createdAt || 0) < DAY_MS){
-          base.child('removed').set(true);          // jünger als 24 h: nur ausblenden
-        } else {
-          base.remove();
-        }
-      };
-
-      list.appendChild(el);
     });
-  }
+  })();
 
+  render();
 })();
 </script>
+
 </body>
 </html>
