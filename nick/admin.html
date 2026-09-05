@@ -32,7 +32,7 @@
   .tab.on{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#12071C;border-color:transparent;font-weight:700}
   .tab.snd{margin-left:auto}
 
-  .item{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px 15px;margin-bottom:10px;
+  .item{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px 15px;margin-bottom:10px;
         transition:opacity .2s}
   .item.played{opacity:.42}
   .item.rejected{border-color:rgba(255,122,138,.4)}
@@ -44,6 +44,9 @@
                background:rgba(0,0,0,.28);color:var(--foam);font-size:16px;cursor:pointer}
   .acts button.on{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#12071C;border-color:transparent}
   .acts button.del.arm{border-color:var(--bad);color:var(--bad)}
+  .react-picker{position:absolute;right:12px;bottom:12px;z-index:5;display:flex;gap:4px;flex-wrap:wrap;justify-content:center;max-width:236px;background:#1A1024;border:1px solid rgba(196,59,245,.45);border-radius:12px;padding:7px 9px;box-shadow:0 10px 24px -8px rgba(0,0,0,.85)}
+  .react-opt{background:none;border:none;font-size:21px;cursor:pointer;padding:2px 4px;border-radius:6px;line-height:1}
+  .react-opt:hover{background:rgba(255,255,255,.10)}
 
   .empty{text-align:center;color:var(--muted);padding:44px 10px;font-size:14px}
   .gate{max-width:400px;margin:70px auto;background:var(--panel);border:1px solid var(--line);
@@ -216,7 +219,19 @@
 
       var base = db.ref(ROOT + '/requests/' + r._id);
       el.querySelector('.p').onclick = function(){ base.child('played').set(!r.played); };
-      el.querySelector('.h').onclick = function(){ base.child('reaction').set(r.reaction ? null : '❤️'); };
+      if (r.reaction){ var hb = el.querySelector('.h'); hb.textContent = r.reaction; hb.classList.add('on'); }
+      el.querySelector('.h').onclick = function(){
+        var old = el.querySelector('.react-picker');
+        if (old){ old.remove(); return; }
+        var pick = document.createElement('div'); pick.className = 'react-picker';
+        ['❤️','🔥','🎉','👏','😁','🤔','😱','🫶','🤟','👍','👎','🤝🏻','✖'].forEach(function(em){
+          var b = document.createElement('button');
+          b.type = 'button'; b.className = 'react-opt'; b.textContent = em;
+          b.onclick = function(ev){ ev.stopPropagation(); base.child('reaction').set(em === '✖' ? null : em); pick.remove(); };
+          pick.appendChild(b);
+        });
+        el.appendChild(pick);
+      };
       el.querySelector('.r').onclick = function(){ base.child('rejected').set(r.rejected ? null : true); };
 
       var del = el.querySelector('.del'), armed = false, t = null;
