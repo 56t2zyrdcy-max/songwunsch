@@ -147,7 +147,7 @@
     dup:'Der Song ist schon in der Liste. Such dir einen anderen aus.',
     fail:'Hat nicht geklappt. Netz prüfen und nochmal versuchen.',
     title:'ANGEKOMMEN', sub:'Nick sieht deinen Wunsch.',
-    rejTitle:'PASST GERADE NICHT', rejSub:'Der Song passt jetzt nicht in den Set — such dir gern einen anderen aus.',
+    rejTitle:'PASST GERADE NICHT', rejSub:'Der Song passt jetzt nicht in den Set — such dir gern einen anderen aus. Deine Wartezeit wurde zurückgesetzt.',
     again:'Neuen Wunsch senden', conn:'Verbindung wird aufgebaut …'
   };
   TEXTS.en = {
@@ -158,7 +158,7 @@
     dup:'That song is already on the list. Pick another one.',
     fail:'That did not work. Check your connection and try again.',
     title:'RECEIVED', sub:'Nick can see your request.',
-    rejTitle:'NOT RIGHT NOW', rejSub:'That one does not fit the set right now — feel free to pick another.',
+    rejTitle:'NOT RIGHT NOW', rejSub:'That one does not fit the set right now — feel free to pick another. Your waiting time has been reset.',
     again:'Send another request', conn:'Connecting …'
   };
 
@@ -226,12 +226,75 @@
   }
   function say(text, cls){ msgEl.textContent = text; msgEl.className = 'msg' + (cls ? ' ' + cls : ''); }
 
+  /* ---------- my requests (24 h) ----------
+     Ids of requests sent from THIS phone are kept for 24 hours, so the DJ's
+     reaction and the "does not fit" notice still reach the guest after the
+     page was closed or reloaded. Without this the link only lived inside
+     the tab that sent the request. */
+  var MYREQS = 'myreqs';
+  function loadMine(){
+    var obj = {};
+    try{ obj = JSON.parse(get(MYREQS) || '{}') || {}; }catch(e){ obj = {}; }
+    var now = Date.now(), k;
+    for (k in obj){
+      if (!obj[k] || !obj[k].ts || now - obj[k].ts > 24 * 60 * 60 * 1000) delete obj[k];
+    }
+    return obj;
+  }
+  function saveMine(o){ try{ set(MYREQS, JSON.stringify(o)); }catch(e){} }
+
+  /* Lifts this phone's 30-minute lock. Used when the DJ rejects a song
+     (fairness) and when the DJ sends a reaction (a small reward). */
+  function liftCooldown(){
+    try{ db.ref(ROOT + '/guardrail/devices/' + deviceKey).remove().catch(function(){}); }catch(e){}
+  }
+
+  function watchRequest(id, song){
+    if (!id || typeof id !== 'string') return;
+    var mine = loadMine();
+    if (!mine[id]) mine[id] = { song: song || '', ts: Date.now() };
+    saveMine(mine);
+    attachWatch(id, mine[id]);
+  }
+
+  function attachWatch(id, meta){
+    db.ref(ROOT + '/requests/' + id + '/rejected').on('value', function(s){
+      if (s.val() !== true) return;
+      var mine = loadMine();
+      if (mine[id] && mine[id].seen) return;
+      if (mine[id]){ mine[id].seen = true; saveMine(mine); }
+      wasRejected = true;
+      showSentCard(meta.song);
+      $('sentTitle').textContent = T.rejTitle;
+      $('sentSub').textContent   = T.rejSub;
+      $('again').hidden = false;
+      liftCooldown();
+    }, function(){});
+
+    db.ref(ROOT + '/requests/' + id + '/reaction').on('value', function(s){
+      var r = s.val();
+      if (!r || typeof r !== 'string') return;
+      var mine = loadMine();
+      if (mine[id] && mine[id].lastReaction === r) return;
+      if (mine[id]){ mine[id].lastReaction = r; saveMine(mine); }
+      showSentCard(meta.song);
+      var box = $('reactionBox');
+      box.textContent = r; box.hidden = false;
+      liftCooldown();
+    }, function(){});
+  }
+
+
   /* ---------- anonymous session ---------- */
   say(T.conn, '');
   firebase.auth().onAuthStateChanged(function(user){
     if (!user) return;
     sendEl.disabled = false;
     say('', '');
+    // Re-attach the watchers for requests this phone sent earlier.
+    var mine = loadMine();
+    saveMine(mine);
+    Object.keys(mine).forEach(function(id){ attachWatch(id, mine[id]); });
   });
   firebase.auth().signInAnonymously().catch(function(e){
     console.error('Anonymous sign-in failed:', e);
@@ -288,29 +351,20 @@
   songEl.addEventListener('keydown', function(e){ if (e.key === 'Enter') sendEl.click(); });
 
   /* ---------- after sending ---------- */
-  function showSent(song, id){
+  function showSentCard(song){
     formCard.style.display = 'none';
     sentCard.classList.add('on');
-    $('sentSong').textContent = song;
+    if (song) $('sentSong').textContent = song;
+  }
+
+  function showSent(song, id){
+    showSentCard(song);
     $('sentTitle').textContent = T.title;
     $('sentSub').innerHTML = '<span class="pulse"></span>' + T.sub;
     $('again').hidden = true;
     $('reactionBox').hidden = true;
     wasRejected = false;
-
-    db.ref(ROOT + '/requests/' + id + '/rejected').on('value', function(s){
-      if (!s.val()) return;
-      wasRejected = true;
-      $('sentTitle').textContent = T.rejTitle;
-      $('sentSub').textContent   = T.rejSub;
-      $('again').hidden = false;
-    });
-    db.ref(ROOT + '/requests/' + id + '/reaction').on('value', function(s){
-      var r = s.val();
-      if (!r) return;
-      var box = $('reactionBox');
-      box.textContent = r; box.hidden = false;
-    });
+    watchRequest(id, song);
   }
 
   $('again').addEventListener('click', function(){
