@@ -61,6 +61,31 @@ window.DJS = {
     noteEn:   'Requests are played when they fit the vibe — not every song fits every moment.'
   },
 
+  nik: {
+    slug:     'nik',
+    name:     'DJ NIK',
+    slogan:   '',
+    accent:   '#6C63F0',
+    accent2:  '#A9A2FF',
+    bgTop:    '#141238',
+    bgBase:   '#07060F',
+    panelTop: '#131038',
+    panelBase:'#08061C',
+    headerLogo: true,
+    logoMark: 'assets/nik-mark.svg',
+    logoFull: 'assets/nik-full.svg',
+    logoPrint:'assets/nik-full-light.svg',
+    panelKey: 'Nk7vQz2LpR9xTa4C',
+    ownerUid: '',
+    tips:     false,
+    paypal:   '',
+    socials:  { instagram: 'https://www.instagram.com/dj_nik_music',
+                spotify: 'https://open.spotify.com/artist/38CCU0ypJqRjuEnVhfdE6i',
+                apple: '', soundcloud: '', youtube: '', reviews: '', shop: '' },
+    noteDe:   'Wünsche werden gespielt, wenn sie zur Stimmung passen — nicht jeder Song passt in jeden Moment.',
+    noteEn:   'Requests are played when they fit the vibe — not every song fits every moment.'
+  },
+
   crowd: {
     slug:     'crowd',
     name:     'DJ CROW D',
